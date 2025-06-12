@@ -9,13 +9,13 @@ from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.role import Role
-from app.domain.repositories.base import RoleRepository
+from app.domain.repositories.base import IRoleRepository
 
 
 class RoleService:
     """Servicio para gestionar la lógica de negocio relacionada con roles."""
     
-    def __init__(self, role_repository: RoleRepository) -> None:
+    def __init__(self, role_repository: IRoleRepository) -> None:
         self.role_repository = role_repository
     
     async def get_role(self, role_id: UUID) -> Role:
@@ -48,34 +48,28 @@ class RoleService:
         """
         return await self.role_repository.get_by_name(name)
     
-    async def get_roles(self) -> Sequence[Role]:
+    async def list_roles(self):
         """
-        Obtiene la lista de todos los roles.
-        
-        Returns:
-            Sequence[Role]: Lista de roles
+        Devuelve una lista de RoleResponse (schema).
         """
-        return await self.role_repository.list()
+        from app.schemas.role import RoleResponse
+        roles = await self.role_repository.list()
+        return [RoleResponse(id=r.id, name=r.name, description=r.description) for r in roles]
     
-    async def create_role(self, role: Role) -> Role:
+    async def create_role(self, role_in):
         """
-        Crea un nuevo rol.
-        
-        Args:
-            role: Rol a crear
-            
-        Returns:
-            Role: El rol creado
-            
-        Raises:
-            ValidationError: Si ya existe un rol con el mismo nombre
+        Crea un nuevo rol y retorna el schema de respuesta.
         """
-        # Validar que el nombre no esté duplicado
-        existing_role = await self.role_repository.get_by_name(role.name)
+        from app.schemas.role import RoleResponse
+        existing_role = await self.role_repository.get_by_name(role_in.name)
         if existing_role:
-            raise ValidationError(f"Ya existe un rol con el nombre {role.name}")
-        
-        return await self.role_repository.create(role)
+            raise ValidationError(f"Ya existe un rol con el nombre {role_in.name}")
+        # Suponiendo que role_in es un schema, crear ORM
+        from app.database.models import Role as RoleORM
+        from uuid import uuid4
+        role_orm = RoleORM(id=uuid4(), name=role_in.name, description=role_in.description)
+        created = await self.role_repository.create(role_orm)
+        return RoleResponse(id=created.id, name=created.name, description=created.description)
     
     async def update_role(self, role: Role) -> Role:
         """

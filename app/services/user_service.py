@@ -9,13 +9,17 @@ from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User
-from app.domain.repositories.base import UserRepository
+from app.domain.repositories.base import IUserRepository
 
 
 class UserService:
+    def __init__(self, user_repository: IUserRepository, hasher=None) -> None:
+        self.user_repository = user_repository
+        self.hasher = hasher
+
     """Servicio para gestionar la lógica de negocio relacionada con usuarios."""
     
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(self, user_repository: IUserRepository) -> None:
         self.user_repository = user_repository
     
     async def get_user(self, user_id: UUID) -> User:
@@ -58,6 +62,47 @@ class UserService:
         return await self.user_repository.list()
     
     async def get_active_users(self) -> Sequence[User]:
+        """
+        Obtiene la lista de usuarios activos.
+        Returns:
+            Sequence[User]: Lista de usuarios activos
+        """
+        return await self.user_repository.get_active()
+
+    async def create_user_with_hashed_password(self, user_in):
+        """
+        Crea un usuario con la contraseña hasheada y valida unicidad de email.
+        Args:
+            user_in: UserCreate (schema)
+        Returns:
+            UserResponse (schema)
+        Raises:
+            ValidationError: Si el email ya existe
+        """
+        # Validar que no exista el email
+        existing = await self.user_repository.get_by_email(user_in.email)
+        if existing:
+            raise ValidationError(f"Ya existe un usuario con el email {user_in.email}")
+        hashed_password = self.hasher.hash_password(user_in.password)
+        # Aquí deberías crear el modelo ORM para la base de datos
+        from app.database.models import User as UserORM
+        from uuid import uuid4
+        user_orm = UserORM(
+            id=uuid4(),
+            email=user_in.email,
+            hashed_password=hashed_password,
+            full_name=user_in.full_name or "",
+            is_active=True
+        )
+        await self.user_repository.create(user_orm)
+        # Construir el schema de respuesta
+        from app.schemas.user import UserResponse
+        return UserResponse(
+            id=user_orm.id,
+            email=user_orm.email,
+            full_name=user_orm.full_name
+        )
+
         """
         Obtiene la lista de usuarios activos.
         

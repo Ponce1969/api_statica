@@ -27,53 +27,56 @@ La API sigue una arquitectura limpia (Clean Architecture) basada en principios S
 ```
 ├── app/
 │   ├── main.py                     # Punto de entrada de la aplicación FastAPI
-│   ├── core/                       # Configuración y utilidades globales 
-│   │   ├── config.py               # Gestión de variables de entorno (.env)
-│   │   ├── security.py             # Hashing de contraseñas (Argon2), JWT
-│   │   ├── deps.py                 # Inyección de dependencias 
-│   │   ├── events.py               # Manejadores de eventos (startup/shutdown)
-│   │   └── exceptions.py           # Excepciones personalizadas generales
-│   ├── domain/                     # Capa de dominio - Reglas y entidades core
-│   │   ├── models/                 # Modelos puros de dominio (sin ORM)
-│   │   │   ├── base.py             # Clases base (Entity, ValueObject)
-│   │   │   ├── user.py             # Modelo de dominio User
-│   │   │   ├── role.py             # Modelo de dominio Role
-│   │   │   └── contact.py          # Modelo de dominio Contact
-│   │   ├── exceptions/             # Excepciones específicas del dominio
-│   │   │   └── base.py             # Excepciones base del dominio
-│   │   ├── repositories/           # Interfaces de repositorios (puertos)
-│   │   │   └── base.py             # Interfaces abstractas para repositorios
-│   │   └── value_objects/          # Objetos de valor inmutables
-│   ├── services/                   # Capa de aplicación - Lógica de negocio
-│   │   ├── user_service.py         # Servicio para gestión de usuarios
-│   │   ├── role_service.py         # Servicio para gestión de roles
-│   │   └── contact_service.py      # Servicio para gestión de contactos
+│   ├── core/                       # Configuración y utilidades globales
+│   │   ├── config.py               # Variables de entorno y settings
+│   │   ├── deps.py                 # Factories e inyección de dependencias
+│   │   ├── events.py               # Eventos de ciclo de vida
+│   │   ├── exceptions.py           # Excepciones generales
+│   │   └── security/               # Seguridad (JWT, hashing, etc.)
+│   │       ├── jwt.py
+│   │       └── hashes.py
 │   ├── database/                   # Configuración y modelos de la base de datos
-│   │   ├── session.py              # Sesión de SQLAlchemy
-│   │   ├── models.py               # Modelos ORM de SQLAlchemy
-│   │   └── base.py                 # Declaración de la base de SQLAlchemy
-│   ├── crud/                       # Implementaciones concretas de repositorios
-│   │   ├── base.py                 # Implementación base de repositorios
-│   │   ├── user.py                 # Repositorio de usuarios
-│   │   ├── role.py                 # Repositorio de roles
-│   │   └── contact.py              # Repositorio de contactos
-│   ├── schemas/                    # Modelos Pydantic para validación de datos
-│   │   ├── user.py                 # Schemas para usuarios
-│   │   ├── role.py                 # Schemas para roles
-│   │   ├── contact.py              # Schemas para contactos
-│   │   └── token.py                # Schemas para JWT
-│   ├── api/                        # Capa de presentación - Endpoints API
-│   │   ├── users.py                # Endpoints para usuarios
-│   │   ├── roles.py                # Endpoints para roles
-│   │   ├── contacts.py             # Endpoints para contactos
-│   │   └── auth.py                 # Endpoints para autenticación
+│   │   ├── base.py                 # Declaración de base SQLAlchemy
+│   │   ├── models.py               # Modelos ORM
+│   │   └── session.py              # Sesión de SQLAlchemy
+│   ├── domain/                     # Capa de dominio puro
+│   │   ├── exceptions/             # Excepciones de dominio
+│   │   ├── models/                 # Modelos de dominio (sin ORM)
+│   │   ├── repositories/           # Interfaces (puertos) de repositorios
+│   │   └── value_objects/          # Objetos de valor
+│   ├── crud/                       # Implementaciones concretas de repositorios (infraestructura)
+│   │   ├── base.py                 # Implementación base de repositorio
+│   │   ├── user.py                 # Implementación concreta de repositorio de usuarios
+│   │   ├── role.py                 # Implementación concreta de repositorio de roles
+│   │   └── contact.py              # Implementación concreta de repositorio de contactos
+│   ├── schemas/                    # Modelos Pydantic para validación/serialización
+│   │   ├── user.py                 # Implementación concreta de repositorio de usuarios
+│   │   ├── role.py                 # Implementación concreta de repositorio de roles
+│   │   ├── contact.py              # Implementación concreta de repositorio de contactos
+│   │   └── token.py                # Implementación concreta de repositorio de tokens
+│   ├── services/                   # Lógica de negocio (aplicación)
+│   │   ├── user_service.py         # Implementación concreta de repositorio de usuarios
+│   │   ├── role_service.py         # Implementación concreta de repositorio de roles
+│   │   ├── contact_service.py      # Implementación concreta de repositorio de contactos
+│   │   └── auth_service.py         # Implementación concreta de repositorio de autenticación
+│   ├── api/                        # Endpoints y routers
+│   │   └── v1/
+│   │       ├── api.py              # Incluye routers de endpoints
+│   │       └── endpoints/
+│   │           ├── users.py        # Implementación concreta de repositorio de usuarios
+│   │           ├── roles.py        # Implementación concreta de repositorio de roles
+│   │           ├── contacts.py     # Implementación concreta de repositorio de contactos
+│   │           └── auth.py         # Implementación concreta de repositorio de autenticación
+│   └── tests/                      # Pruebas automáticas
+│       └── __init__.py
 ```
-├── .env.example                    # Ejemplo del archivo de variables de entorno
-├── Dockerfile                      # Define la imagen Docker de la API
-├── docker-compose.yml              # Orquesta los servicios (API, DB)
-├── requirements.txt                # Dependencias de Python
-├── venv/                           # Entorno virtual de Python (Ignorado por Git)
+├── .env.example                    # Variables de entorno de ejemplo
+├── Dockerfile                      # Imagen Docker
+├── docker-compose.yml              # Orquestación de servicios
+├── requirements.txt                # Dependencias
+├── venv/                           # Entorno virtual (ignorado)
 └── README.md                       # Este archivo
+
 
 ### Principios de Clean Architecture Aplicados
 
