@@ -4,10 +4,9 @@ Este modelo representa el concepto de contacto en el dominio de la aplicación,
 independientemente de la persistencia o infraestructura.
 """
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from app.domain.exceptions.base import ValidationError, StructuralValidationError
+from app.domain.exceptions.base import StructuralValidationError, ValidationError
 from app.domain.models.base import AuditableEntity
 
 
@@ -19,7 +18,7 @@ class Contact(AuditableEntity):
     name: str
     email: str
     message: str
-    phone: Optional[str]
+    phone: str | None
     read: bool
     
     def __init__(
@@ -27,10 +26,10 @@ class Contact(AuditableEntity):
         name: str,
         email: str,
         message: str,
-        phone: Optional[str] = None,
-        entity_id: Optional[UUID] = None,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
+        phone: str | None = None,
+        entity_id: UUID | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
         read: bool = False
     ):
         super().__init__(entity_id, created_at, updated_at)
@@ -59,7 +58,7 @@ class Contact(AuditableEntity):
         self.message = new_message
         self.updated_at = datetime.utcnow()
     
-    def update_contact_info(self, name: Optional[str] = None, email: Optional[str] = None, phone: Optional[str] = None) -> None:
+    def update_contact_info(self, name: str | None = None, email: str | None = None, phone: str | None = None) -> None:
         """Actualiza la información de contacto."""
         if name is not None:
             if not name.strip():

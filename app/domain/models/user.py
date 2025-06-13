@@ -4,7 +4,6 @@ Este modelo representa el concepto de usuario en el dominio de la aplicación,
 independientemente de la persistencia o infraestructura.
 """
 from datetime import datetime
-from typing import List, Optional, Set
 from uuid import UUID
 
 from app.domain.models.base import AuditableEntity
@@ -16,17 +15,17 @@ class User(AuditableEntity):
     email: str
     full_name: str
     is_active: bool
-    role_ids: Set[UUID]  # IDs de los roles asignados al usuario
+    role_ids: set[UUID]  # IDs de los roles asignados al usuario
     
     def __init__(
         self,
         email: str,
         full_name: str,
-        entity_id: Optional[UUID] = None,
+        entity_id: UUID | None = None,
         is_active: bool = True,
-        role_ids: Optional[Set[UUID]] = None,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
+        role_ids: set[UUID] | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ):
         super().__init__(entity_id, created_at, updated_at)
         self.email = email

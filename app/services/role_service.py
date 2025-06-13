@@ -4,7 +4,6 @@ Servicio para la gestión de roles.
 Contiene la lógica de negocio relacionada con roles, separada del acceso a datos
 y de la presentación (API).
 """
-from collections.abc import Sequence
 from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
@@ -48,12 +47,14 @@ class RoleService:
         """
         return await self.role_repository.get_by_name(name)
     
-    async def list_roles(self):
+    async def list_roles(self, name: str | None = None):
         """
-        Devuelve una lista de RoleResponse (schema).
+        Devuelve una lista de RoleResponse (schema), con filtro opcional por nombre exacto.
         """
         from app.schemas.role import RoleResponse
         roles = await self.role_repository.list()
+        if name is not None:
+            roles = [r for r in roles if r.name == name]
         return [RoleResponse(id=r.id, name=r.name, description=r.description) for r in roles]
     
     async def create_role(self, role_in):
@@ -65,8 +66,9 @@ class RoleService:
         if existing_role:
             raise ValidationError(f"Ya existe un rol con el nombre {role_in.name}")
         # Suponiendo que role_in es un schema, crear ORM
-        from app.database.models import Role as RoleORM
         from uuid import uuid4
+
+        from app.database.models import Role as RoleORM
         role_orm = RoleORM(id=uuid4(), name=role_in.name, description=role_in.description)
         created = await self.role_repository.create(role_orm)
         return RoleResponse(id=created.id, name=created.name, description=created.description)

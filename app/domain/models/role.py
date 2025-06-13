@@ -4,7 +4,6 @@ Este modelo representa el concepto de rol en el dominio de la aplicación,
 independientemente de la persistencia o infraestructura.
 """
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from app.domain.models.base import Entity
@@ -14,15 +13,15 @@ class Role(Entity):
     """Entidad de dominio que representa un rol en el sistema."""
     
     name: str
-    description: Optional[str]
+    description: str | None
     created_at: datetime
     
     def __init__(
         self,
         name: str,
-        description: Optional[str] = None,
-        entity_id: Optional[UUID] = None,
-        created_at: Optional[datetime] = None
+        description: str | None = None,
+        entity_id: UUID | None = None,
+        created_at: datetime | None = None
     ):
         super().__init__(entity_id)
         self.name = name

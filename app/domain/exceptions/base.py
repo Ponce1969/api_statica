@@ -5,6 +5,7 @@ Estas excepciones representan errores específicos del dominio y son independien
 de la infraestructura subyacente (como SQL, HTTP, etc).
 """
 from __future__ import annotations
+
 from uuid import UUID
 
 

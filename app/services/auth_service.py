@@ -1,8 +1,9 @@
-from app.domain.models.user import User
-from app.domain.repositories.base import IUserRepository
 from app.core.security.hashing import Hasher
 from app.core.security.jwt import create_access_token
 from app.domain.exceptions.base import ValidationError
+from app.domain.models.user import User
+from app.domain.repositories.base import IUserRepository
+
 
 class AuthService:
     def __init__(self, user_repository: IUserRepository, hasher: Hasher):

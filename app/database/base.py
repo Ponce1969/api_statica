@@ -3,9 +3,11 @@ Base declarativa central para todos los modelos ORM.
 
 Todos los modelos deben heredar de `Base` para ser reconocidos por SQLAlchemy.
 """
-from typing import Any, Dict, Optional, List, Type
+from typing import Any
+
 from pydantic import BaseModel
 from sqlalchemy.orm import DeclarativeBase, declared_attr
+
 
 class Base(DeclarativeBase):
     """
@@ -29,9 +31,9 @@ class Base(DeclarativeBase):
 
     def to_dict(
         self,
-        include: Optional[List[str]] = None,
-        exclude: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+        exclude: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Convierte la instancia a un dict, con opciones para incluir/excluir campos.
         """
@@ -47,6 +49,6 @@ class Base(DeclarativeBase):
 
     # 🧪 Pro: integración opcional con Pydantic BaseModel
     # Útil si usas modelos Pydantic para respuestas API
-    def as_pydantic(self, model: Type[BaseModel]) -> BaseModel:
+    def as_pydantic(self, model: type[BaseModel]) -> BaseModel:
         """Convierte la instancia ORM en un modelo Pydantic usando model_validate."""
         return model.model_validate(self.to_dict())

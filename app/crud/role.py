@@ -1,6 +1,8 @@
-from app.domain.repositories.base import IRoleRepository
-from app.database.models import Role as RoleORM
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.models import Role as RoleORM
+from app.domain.repositories.base import IRoleRepository
+
 
 class RoleRepository(IRoleRepository):
     def __init__(self, db: AsyncSession = None):

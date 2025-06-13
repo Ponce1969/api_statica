@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.api.v1.api import api_router
-from app.core.events import startup_event, shutdown_event
+from app.core.config import settings
+from app.core.events import shutdown_event, startup_event
+
 
 def create_app() -> FastAPI:
     """Función factory para crear la aplicación FastAPI con todas las configuraciones.

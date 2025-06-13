@@ -1,6 +1,8 @@
-from app.domain.repositories.base import IContactRepository
-from app.database.models import Contact as ContactORM
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.models import Contact as ContactORM
+from app.domain.repositories.base import IContactRepository
+
 
 class ContactRepository(IContactRepository):
     def __init__(self, db: AsyncSession = None):

@@ -52,14 +52,18 @@ class UserService:
         """
         return await self.user_repository.get_by_email(email)
     
-    async def get_users(self) -> Sequence[User]:
+    async def get_users(self, email: str | None = None, is_active: bool | None = None) -> Sequence[User]:
         """
-        Obtiene la lista de todos los usuarios.
-        
-        Returns:
-            List[User]: Lista de usuarios
+        Obtiene la lista de usuarios, con filtros opcionales por email e is_active.
         """
-        return await self.user_repository.list()
+        users = await self.user_repository.list()
+        if email is not None and is_active is not None:
+            return [u for u in users if u.email == email and u.is_active == is_active]
+        elif email is not None:
+            return [u for u in users if u.email == email]
+        elif is_active is not None:
+            return [u for u in users if u.is_active == is_active]
+        return users
     
     async def get_active_users(self) -> Sequence[User]:
         """
@@ -85,8 +89,9 @@ class UserService:
             raise ValidationError(f"Ya existe un usuario con el email {user_in.email}")
         hashed_password = self.hasher.hash_password(user_in.password)
         # Aquí deberías crear el modelo ORM para la base de datos
-        from app.database.models import User as UserORM
         from uuid import uuid4
+
+        from app.database.models import User as UserORM
         user_orm = UserORM(
             id=uuid4(),
             email=user_in.email,

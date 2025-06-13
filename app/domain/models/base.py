@@ -4,7 +4,6 @@ Estos modelos son independientes de la infraestructura y representan las entidad
 centrales de la aplicación y sus reglas de negocio.
 """
 from datetime import datetime
-from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
 
 
@@ -15,10 +14,10 @@ class Entity:
     """
     id: UUID
     
-    def __init__(self, entity_id: Optional[UUID] = None):
+    def __init__(self, entity_id: UUID | None = None):
         self.id = entity_id or uuid4()
     
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Entity):
             return False
         return self.id == other.id
@@ -44,7 +43,7 @@ class ValueObject:
     no por su identidad. Dos objetos de valor con los mismos valores son iguales.
     """
     
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             return False
         return self.__dict__ == other.__dict__
@@ -60,13 +59,13 @@ class AuditableEntity(Entity):
     fechas de creación y actualización.
     """
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
     
     def __init__(
         self, 
-        entity_id: Optional[UUID] = None,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None
+        entity_id: UUID | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None
     ):
         super().__init__(entity_id)
         self.created_at = created_at or datetime.utcnow()

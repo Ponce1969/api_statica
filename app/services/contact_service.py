@@ -36,12 +36,21 @@ class ContactService:
             raise EntityNotFoundError(entity="Contacto", entity_id=contact_id)
         return contact
     
-    async def list_contacts(self):
+    async def get_contacts(self, email: str | None = None, is_read: bool | None = None):
         """
-        Devuelve una lista de ContactResponse (schema).
+        Devuelve una lista de ContactResponse (schema), con filtros opcionales por email y estado leído.
         """
         from app.schemas.contact import ContactResponse
-        contacts = await self.contact_repository.list()
+
+        # Lógica de filtrado combinable
+        if email is not None and is_read is not None:
+            contacts = [c for c in await self.contact_repository.list() if c.email == email and c.is_read == is_read]
+        elif email is not None:
+            contacts = [c for c in await self.contact_repository.list() if c.email == email]
+        elif is_read is not None:
+            contacts = [c for c in await self.contact_repository.list() if c.is_read == is_read]
+        else:
+            contacts = await self.contact_repository.list()
         return [ContactResponse(
             id=c.id,
             full_name=c.full_name,
@@ -66,9 +75,10 @@ class ContactService:
         """
         Crea un nuevo contacto y retorna el schema de respuesta.
         """
-        from app.schemas.contact import ContactResponse
-        from app.database.models import Contact as ContactORM
         from uuid import uuid4
+
+        from app.database.models import Contact as ContactORM
+        from app.schemas.contact import ContactResponse
         contact_orm = ContactORM(
             id=uuid4(),
             full_name=contact_in.full_name,

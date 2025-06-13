@@ -7,7 +7,7 @@ acceso a datos.
 """
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Any, Generic, TypeVar, Optional
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from app.domain.models.base import Entity
@@ -34,7 +34,7 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
     """
 
     @abstractmethod
-    async def get(self, entity_id: UUID) -> Optional[T]: # Usar Optional en lugar de T | None
+    async def get(self, entity_id: UUID) -> T | None: # Usar Optional en lugar de T | None
         """
         Obtiene una entidad por su ID.
 
@@ -105,7 +105,7 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
         ...
 
     @abstractmethod
-    async def get_by_field(self, field_name: str, value: Any) -> Optional[T]: # Usar Any para el valor del campo
+    async def get_by_field(self, field_name: str, value: Any) -> T | None: # Usar Any para el valor del campo
         """
         Obtiene una entidad por un campo específico.
         Ideal para campos únicos.
@@ -191,7 +191,7 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
     #     ...
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         """
         Obtiene un usuario por su dirección de email.
 
@@ -261,7 +261,7 @@ class IRoleRepository(IRepository[Role], ABC): # Renombrado y hereda de IReposit
     # get y list son heredados y ya tipados para Role
 
     @abstractmethod
-    async def get_by_name(self, name: str) -> Optional[Role]: # Usar Optional
+    async def get_by_name(self, name: str) -> Role | None: # Usar Optional
         """
         Obtiene un rol por su nombre.
 
