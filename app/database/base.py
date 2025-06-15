@@ -3,10 +3,10 @@ Base declarativa central para todos los modelos ORM.
 
 Todos los modelos deben heredar de `Base` para ser reconocidos por SQLAlchemy.
 """
-from typing import Any
+from typing import Any, ClassVar, Optional, Dict, List
 
 from pydantic import BaseModel
-from sqlalchemy.orm import DeclarativeBase, declared_attr
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped
 
 
 class Base(DeclarativeBase):
@@ -15,12 +15,15 @@ class Base(DeclarativeBase):
     Provee nombre de tabla automático, representación y conversión a dict.
     """
 
-    @declared_attr
+    @declared_attr.directive
     def __tablename__(cls) -> str:
-        # Fallback seguro y legible: solo asigna si no está definido explícitamente
-        if not hasattr(cls, "__tablename__"):
-            return cls.__name__.lower()
-        return cls.__tablename__
+        """
+        Define el nombre de la tabla automáticamente si no se especifica en el modelo.
+        Usa el nombre de la clase en minúsculas como fallback.
+        """
+        if "__tablename__" in cls.__dict__:
+            return cls.__tablename__
+        return cls.__name__.lower()
 
     def __repr__(self) -> str:
         try:
@@ -29,16 +32,18 @@ class Base(DeclarativeBase):
         except Exception:
             return f"<{self.__class__.__name__} (no table bound)>"
 
-    def to_dict(
-        self,
-        include: list[str] | None = None,
-        exclude: list[str] | None = None
-    ) -> dict[str, Any]:
+    def to_dict(self, include: list[str] | None = None, exclude: list[str] | None = None) -> dict[str, Any]:
         """
-        Convierte la instancia a un dict, con opciones para incluir/excluir campos.
+        Convierte la instancia ORM en un diccionario solo con columnas reales.
+        Args:
+            include: Lista de campos a incluir (opcional).
+            exclude: Lista de campos a excluir (opcional).
+        Returns:
+            Diccionario con los valores de las columnas.
         """
+        from sqlalchemy import inspect
         try:
-            keys = self.__table__.columns.keys()
+            keys = [c.key for c in inspect(self).mapper.column_attrs]
             if include:
                 keys = [k for k in keys if k in include]
             if exclude:
@@ -49,6 +54,14 @@ class Base(DeclarativeBase):
 
     # 🧪 Pro: integración opcional con Pydantic BaseModel
     # Útil si usas modelos Pydantic para respuestas API
-    def as_pydantic(self, model: type[BaseModel]) -> BaseModel:
-        """Convierte la instancia ORM en un modelo Pydantic usando model_validate."""
-        return model.model_validate(self.to_dict())
+    def as_pydantic(self, model: type[BaseModel], strict: bool = False) -> BaseModel:
+        """
+        Convierte la instancia ORM en un modelo Pydantic.
+        Args:
+            model: Clase del modelo Pydantic.
+            strict: Si es True, exige que todos los campos requeridos estén presentes.
+        Returns:
+            Instancia del modelo Pydantic validada.
+        """
+        data = self.to_dict()
+        return model.model_validate(data, strict=strict)

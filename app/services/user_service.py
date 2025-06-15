@@ -7,20 +7,29 @@ y de la presentación (API).
 from collections.abc import Sequence
 from uuid import UUID
 
+from typing import Any, Sequence
+
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User
 from app.domain.repositories.base import IUserRepository
 
+# Importar los schemas para evitar forward references
+from app.schemas.user import UserCreate, UserResponse
+
 
 class UserService:
-    def __init__(self, user_repository: IUserRepository, hasher=None) -> None:
-        self.user_repository = user_repository
-        self.hasher = hasher
-
     """Servicio para gestionar la lógica de negocio relacionada con usuarios."""
     
-    def __init__(self, user_repository: IUserRepository) -> None:
+    def __init__(self, user_repository: IUserRepository, hasher: Any = None) -> None:
+        """
+        Inicializa el servicio de usuarios.
+        
+        Args:
+            user_repository: Repositorio de usuarios
+            hasher: Servicio de hashing para contraseñas (opcional)
+        """
         self.user_repository = user_repository
+        self.hasher = hasher
     
     async def get_user(self, user_id: UUID) -> User:
         """
@@ -73,7 +82,7 @@ class UserService:
         """
         return await self.user_repository.get_active()
 
-    async def create_user_with_hashed_password(self, user_in):
+    async def create_user_with_hashed_password(self, user_in: UserCreate) -> UserResponse:
         """
         Crea un usuario con la contraseña hasheada y valida unicidad de email.
         Args:
@@ -91,30 +100,22 @@ class UserService:
         # Aquí deberías crear el modelo ORM para la base de datos
         from uuid import uuid4
 
-        from app.database.models import User as UserORM
-        user_orm = UserORM(
-            id=uuid4(),
+        from app.domain.models.user import User
+        user_domain = User(
+            entity_id=uuid4(),
             email=user_in.email,
-            hashed_password=hashed_password,
             full_name=user_in.full_name or "",
-            is_active=True
+            is_active=True,
+            is_superuser=False
         )
-        await self.user_repository.create(user_orm)
+        await self.user_repository.create(user_domain)
         # Construir el schema de respuesta
         from app.schemas.user import UserResponse
         return UserResponse(
-            id=user_orm.id,
-            email=user_orm.email,
-            full_name=user_orm.full_name
+            id=user_domain.id,
+            email=user_domain.email,
+            full_name=user_domain.full_name
         )
-
-        """
-        Obtiene la lista de usuarios activos.
-        
-        Returns:
-            Sequence[User]: Lista de usuarios activos
-        """
-        return await self.user_repository.get_active()
     
     async def create_user(self, user: User) -> User:
         """

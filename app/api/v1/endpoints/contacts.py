@@ -1,10 +1,12 @@
+from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from app.core.deps import get_contact_service
 from app.schemas.contact import ContactCreate, ContactResponse
 from app.services.contact_service import ContactService
+from app.domain.models.contact import Contact
 
 router = APIRouter()
 
@@ -37,7 +39,15 @@ async def get_contact(
     service: ContactService = Depends(get_contact_service),
 ) -> ContactResponse:
     try:
-        return await service.get_contact(contact_id)
+        contact = await service.get_contact(contact_id)
+        # Convertir el modelo de dominio a esquema de respuesta
+        return ContactResponse(
+            id=contact.id,
+            email=contact.email,
+            message=contact.message,
+            full_name=contact.full_name,
+            is_read=contact.is_read
+        )
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

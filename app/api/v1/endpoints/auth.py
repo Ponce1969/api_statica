@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 
@@ -12,13 +14,10 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login", response_model=Token)
-async def login(data: LoginRequest, auth_service: AuthService = None) -> dict:
-    if auth_service is None:
-        auth_service = get_auth_service()
+async def login(data: LoginRequest, auth_service: AuthService = Depends(get_auth_service)) -> Dict[str, str]:
     try:
         user = await auth_service.authenticate_user(data.email, data.password)
-        token = auth_service.generate_token(user)
-        return {"access_token": token, "token_type": "bearer"}
+        return auth_service.generate_token(user)
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

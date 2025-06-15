@@ -1,9 +1,16 @@
+import logging
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.events import shutdown_event, startup_event
+
+# Configuración global de logging
+logging.basicConfig(
+    level=logging.DEBUG if getattr(settings, 'DEBUG', False) else logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 
 def create_app() -> FastAPI:
@@ -39,12 +46,12 @@ def create_app() -> FastAPI:
     
     # Ruta raíz para comprobar el funcionamiento básico
     @app.get("/")
-    def root():
+    def root() -> dict[str, str]:
         return {"message": "Sistema de contactos API. Dirígete a /docs para la documentación"}
     
     # Ruta healthcheck para monitoreo
     @app.get("/health")
-    def health_check():
+    def health_check() -> dict[str, str]:
         return {"status": "ok", "version": settings.PROJECT_VERSION}
     
     return app

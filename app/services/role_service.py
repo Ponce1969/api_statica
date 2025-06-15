@@ -10,6 +10,9 @@ from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.role import Role
 from app.domain.repositories.base import IRoleRepository
 
+# Importar los schemas para evitar forward references
+from app.schemas.role import RoleCreate, RoleResponse
+
 
 class RoleService:
     """Servicio para gestionar la lógica de negocio relacionada con roles."""
@@ -47,7 +50,7 @@ class RoleService:
         """
         return await self.role_repository.get_by_name(name)
     
-    async def list_roles(self, name: str | None = None):
+    async def list_roles(self, name: str | None = None) -> list[RoleResponse]:
         """
         Devuelve una lista de RoleResponse (schema), con filtro opcional por nombre exacto.
         """
@@ -57,7 +60,7 @@ class RoleService:
             roles = [r for r in roles if r.name == name]
         return [RoleResponse(id=r.id, name=r.name, description=r.description) for r in roles]
     
-    async def create_role(self, role_in):
+    async def create_role(self, role_in: RoleCreate) -> RoleResponse:
         """
         Crea un nuevo rol y retorna el schema de respuesta.
         """
@@ -68,9 +71,9 @@ class RoleService:
         # Suponiendo que role_in es un schema, crear ORM
         from uuid import uuid4
 
-        from app.database.models import Role as RoleORM
-        role_orm = RoleORM(id=uuid4(), name=role_in.name, description=role_in.description)
-        created = await self.role_repository.create(role_orm)
+        from app.domain.models.role import Role
+        role_domain = Role(entity_id=uuid4(), name=role_in.name, description=role_in.description)
+        created = await self.role_repository.create(role_domain)
         return RoleResponse(id=created.id, name=created.name, description=created.description)
     
     async def update_role(self, role: Role) -> Role:

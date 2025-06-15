@@ -3,7 +3,7 @@ Modelos base del dominio.
 Estos modelos son independientes de la infraestructura y representan las entidades
 centrales de la aplicación y sus reglas de negocio.
 """
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -14,7 +14,7 @@ class Entity:
     """
     id: UUID
     
-    def __init__(self, entity_id: UUID | None = None):
+    def __init__(self, entity_id: UUID | None = None) -> None:
         self.id = entity_id or uuid4()
     
     def __eq__(self, other: object) -> bool:
@@ -66,7 +66,7 @@ class AuditableEntity(Entity):
         entity_id: UUID | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None
-    ):
+    ) -> None:
         super().__init__(entity_id)
-        self.created_at = created_at or datetime.utcnow()
+        self.created_at = created_at or datetime.now(UTC)
         self.updated_at = updated_at

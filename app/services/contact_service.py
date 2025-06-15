@@ -5,11 +5,13 @@ Contiene la lógica de negocio relacionada con contactos, separada del acceso a 
 y de la presentación (API).
 """
 from collections.abc import Sequence
+from typing import List
 from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError
 from app.domain.models.contact import Contact
 from app.domain.repositories.base import IContactRepository
+from app.schemas.contact import ContactCreate, ContactResponse
 
 
 class ContactService:
@@ -36,9 +38,16 @@ class ContactService:
             raise EntityNotFoundError(entity="Contacto", entity_id=contact_id)
         return contact
     
-    async def get_contacts(self, email: str | None = None, is_read: bool | None = None):
+    async def get_contacts(self, email: str | None = None, is_read: bool | None = None) -> List[ContactResponse]:
         """
         Devuelve una lista de ContactResponse (schema), con filtros opcionales por email y estado leído.
+        
+        Args:
+            email: Email opcional para filtrar contactos
+            is_read: Estado de lectura opcional para filtrar contactos
+            
+        Returns:
+            list[ContactResponse]: Lista de contactos convertidos a schema de respuesta
         """
         from app.schemas.contact import ContactResponse
 
@@ -50,7 +59,7 @@ class ContactService:
         elif is_read is not None:
             contacts = [c for c in await self.contact_repository.list() if c.is_read == is_read]
         else:
-            contacts = await self.contact_repository.list()
+            contacts = list(await self.contact_repository.list())
         return [ContactResponse(
             id=c.id,
             full_name=c.full_name,
@@ -71,22 +80,34 @@ class ContactService:
         """
         return await self.contact_repository.get_by_email(email)
     
-    async def create_contact(self, contact_in):
+    async def create_contact(self, contact_in: "ContactCreate") -> ContactResponse:
         """
         Crea un nuevo contacto y retorna el schema de respuesta.
+        
+        Args:
+            contact_in: Datos del contacto a crear (schema)
+            
+        Returns:
+            ContactResponse: Contacto creado convertido a schema de respuesta
         """
         from uuid import uuid4
 
-        from app.database.models import Contact as ContactORM
+        from app.domain.models.contact import Contact
         from app.schemas.contact import ContactResponse
-        contact_orm = ContactORM(
-            id=uuid4(),
+        
+        # Crear modelo de dominio
+        contact = Contact(
             full_name=contact_in.full_name,
             email=contact_in.email,
-            message=contact_in.message,
-            is_read=contact_in.is_read or False
+            message=contact_in.message or "",  # Asegura que nunca sea None
+            is_read=contact_in.is_read or False,
+            entity_id=uuid4()
         )
-        created = await self.contact_repository.create(contact_orm)
+        
+        # Guardar usando el repositorio
+        created = await self.contact_repository.create(contact)
+        
+        # Convertir a schema de respuesta
         return ContactResponse(
             id=created.id,
             full_name=created.full_name,

@@ -1,26 +1,47 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime, UTC
+from uuid import UUID
 
-from app.database.models import Contact as ContactORM
-from app.domain.repositories.base import IContactRepository
+from app.domain.models.base import AuditableEntity
+from app.domain.exceptions.base import StructuralValidationError
 
 
-class ContactRepository(IContactRepository):
-    def __init__(self, db: AsyncSession = None):
-        self.db = db
+class Contact(AuditableEntity):
+    """Entidad de dominio que representa un contacto enviado desde el formulario."""
 
-    async def create(self, contact: ContactORM):
-        self.db.add(contact)
-        await self.db.commit()
-        await self.db.refresh(contact)
-        return contact
+    __slots__ = (
+        "email", "message", "full_name", "is_read",
+        "_id", "created_at", "updated_at"
+    )
 
-    async def get_by_email(self, email: str):
-        result = await self.db.execute(
-            select(ContactORM).where(ContactORM.email == email)
-        )
-        return result.scalars().all()
+    def __init__(
+        self,
+        email: str,
+        message: str,
+        full_name: str,
+        is_read: bool = False,
+        entity_id: UUID | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+    ) -> None:
+        super().__init__(entity_id, created_at, updated_at)
 
-    async def list(self):
-        result = await self.db.execute(select(ContactORM))
-        return result.scalars().all()
+        errors = {}
+
+        if not email or "@" not in email:
+            errors["email"] = "El email es requerido y debe ser válido"
+
+        if not full_name.strip():
+            errors["full_name"] = "El nombre completo no puede estar vacío"
+
+        if not message.strip():
+            errors["message"] = "El mensaje no puede estar vacío"
+
+        if errors:
+            raise StructuralValidationError("Error de validación al crear contacto", errors)
+
+        self.email = email
+        self.message = message
+        self.full_name = full_name
+        self.is_read = is_read
+
 

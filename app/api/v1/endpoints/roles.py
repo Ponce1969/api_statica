@@ -1,24 +1,29 @@
+from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from app.core.deps import get_role_service
 from app.schemas.role import RoleCreate, RoleResponse
 from app.services.role_service import RoleService
+from app.domain.models.role import Role
 
 router = APIRouter()
 
 @router.post("/", response_model=RoleResponse)
 async def create_role(
     role: RoleCreate,
-    service: RoleService = None,
+    service: RoleService = Depends(get_role_service),
 ) -> RoleResponse:
-    if service is None:
-        service = get_role_service()
-    return await service.create_role(role)
+    role_domain = await service.create_role(role)
+    # Convertir el modelo de dominio a esquema de respuesta
+    return RoleResponse(
+        id=role_domain.id,
+        name=role_domain.name,
+        description=role_domain.description
+    )
 
-from typing import Optional
-from fastapi import Query
+
 
 @router.get("/", response_model=list[RoleResponse])
 async def list_roles(
@@ -29,18 +34,29 @@ async def list_roles(
     ),
     service: RoleService = Depends(get_role_service),
 ) -> list[RoleResponse]:
-    return await service.list_roles(name=name)
+    roles = await service.list_roles(name=name)
+    # Convertir los modelos de dominio a esquemas de respuesta
+    return [
+        RoleResponse(
+            id=role.id,
+            name=role.name,
+            description=role.description
+        ) for role in roles
+    ]
 
 @router.get("/{role_id}", response_model=RoleResponse)
 async def get_role(
     role_id: UUID,
-    role_service: RoleService = None,
+    role_service: RoleService = Depends(get_role_service),
 ) -> RoleResponse:
-    if role_service is None:
-        role_service = get_role_service()
     try:
         role = await role_service.get_role(role_id)
-        return role
+        # Convertir el modelo de dominio a esquema de respuesta
+        return RoleResponse(
+            id=role.id,
+            name=role.name,
+            description=role.description
+        )
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

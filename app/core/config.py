@@ -1,24 +1,31 @@
-import secrets
-
-from pydantic import EmailStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class Settings(BaseSettings):
-    API_V1_STR: str = "/api/v1"
 import os
 import secrets
+from typing import List
+
 from pydantic import EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
-
-    SECRET_KEY: str = Field(..., min_length=32)
+    
+    # JWT settings
+    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32), min_length=32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 días
     ALGORITHM: str = "HS256"
-
-    BACKEND_CORS_ORIGINS: list[str] = []
+    
+    # Project info
+    PROJECT_NAME: str = "Contacts Management API"
+    PROJECT_VERSION: str = "0.1.0"
+    DEBUG: bool = True  # Cambia a False en producción
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI: str = Field(
+        default_factory=lambda: os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+    )
+    
+    # CORS
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost", "http://localhost:8000", "http://localhost:3000"]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -29,14 +36,9 @@ class Settings(BaseSettings):
             return v
         raise ValueError(f"Valor inválido para CORS_ORIGINS: {v}")
 
-    PROJECT_NAME: str = "Contacts Management API"
-
-    SQLALCHEMY_DATABASE_URI: str = Field(
-        default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
-    )
-
-    FIRST_SUPERUSER: EmailStr = Field(..., description="Email del superusuario inicial")
-    FIRST_SUPERUSER_PASSWORD: str = Field(..., min_length=8)
+    # Superuser settings
+    FIRST_SUPERUSER: EmailStr = Field(default="admin@example.com", description="Email del superusuario inicial")
+    FIRST_SUPERUSER_PASSWORD: str = Field(default="password123", min_length=8)
 
     model_config = SettingsConfigDict(
         env_file=".env",
