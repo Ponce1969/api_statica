@@ -13,11 +13,6 @@ class Contact(AuditableEntity):
         "_id", "created_at", "updated_at"
     )
 
-    __slots__ = (
-        "full_name", "email", "message", "is_read",
-        "_id", "created_at", "updated_at"
-    )
-
     full_name: str
     email: str
     message: str

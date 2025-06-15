@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 from uuid import UUID
+from datetime import datetime
 
 from app.domain.models.base import Entity
 from app.domain.models.contact import Contact
@@ -358,7 +359,7 @@ class IContactRepository(IRepository[Contact], ABC): # Renombrado y hereda de IR
 
     @abstractmethod
     async def get_by_date_range(
-        self, start_date: str, end_date: str
+        self, start_date: datetime, end_date: datetime
     ) -> Sequence[Contact]:
         """
         Obtiene contactos creados dentro de un rango de fechas.

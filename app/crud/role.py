@@ -1,76 +1,105 @@
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy import select, update as sqlalchemy_update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, exists as sql_exists, func, delete as sql_delete, update as sql_update
 
-from app.domain.exceptions.base import EntityNotFoundError
+from app.domain.models.role import Role as RoleDomain
+from app.domain.exceptions.base import EntityNotFoundError # Modelo de Dominio
 from app.database.models import Role
 from app.domain.repositories.base import IRoleRepository
 
 class RoleRepositoryImpl(IRoleRepository):
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
-        self.model = Role
+        self.model = Role # Modelo ORM
 
-    async def get(self, entity_id: UUID) -> Optional[Role]:
+    def _to_domain(self, role_orm: Role) -> RoleDomain:
+        """Convierte un modelo ORM Role a un modelo de dominio RoleDomain."""
+        if role_orm is None:
+            raise ValueError("role_orm no puede ser None para la conversión a dominio")
+        return RoleDomain(
+            entity_id=role_orm.id,
+            name=role_orm.name,
+            description=role_orm.description,
+            # permissions y updated_at no están en el modelo de dominio Role
+            created_at=role_orm.created_at
+        )
+
+    async def get(self, entity_id: UUID) -> Optional[RoleDomain]:
         query = select(self.model).where(self.model.id == entity_id)
         result = await self.db.execute(query)
         role_orm = result.scalar_one_or_none()
-        return role_orm
+        return self._to_domain(role_orm) if role_orm else None
 
-    async def list(self) -> list[Role]:
+    async def list(self) -> Sequence[RoleDomain]:
         query = select(self.model)
         result = await self.db.execute(query)
-        return list(result.scalars().all())
+        return [self._to_domain(role_orm) for role_orm in result.scalars().all()]
 
-    async def create(self, entity: Role) -> Role:
-        self.db.add(entity)
-        await self.db.commit()
-        await self.db.refresh(entity)
-        return entity
-
-    async def update(self, entity: Role) -> Role:
-        query = select(self.model).where(self.model.id == entity.id)
-        result = await self.db.execute(query)
-        role_orm = result.scalar_one_or_none()
-        if not role_orm:
-            raise EntityNotFoundError("Role", entity.id)
-
-        # Actualizar campos
-        role_orm.name = entity.name
-        role_orm.description = entity.description
-
+    async def create(self, entity: RoleDomain) -> RoleDomain:
+        # Convertir de dominio a ORM
+        # Convertir de dominio a ORM
+        # El ID se toma directamente de la entidad de dominio (entity.id),
+        # que garantiza que siempre sea un UUID. `RoleDomain` hereda `id` de `Entity`,
+        # y `Entity` asegura que `id` sea un UUID (ya sea el `entity_id` proporcionado o uno nuevo).
+        # permissions no se maneja aquí directamente si no está en el constructor de RoleORM o RoleDomain
+        role_orm_data: dict[str, Any] = {
+            "name": entity.name,
+            "description": entity.description,
+            "id": entity.id
+        }
+        
+        role_orm = self.model(**role_orm_data)
         self.db.add(role_orm)
         await self.db.commit()
         await self.db.refresh(role_orm)
-        return role_orm
+        return self._to_domain(role_orm)
 
-    async def delete(self, entity_id: UUID) -> None:
-        query = select(self.model).where(self.model.id == entity_id)
+    async def update(self, entity: RoleDomain) -> RoleDomain:
+        query = select(self.model).where(self.model.id == entity.id)
         result = await self.db.execute(query)
-        role_orm = result.scalar_one_or_none()
+        role_orm = await self.db.get(self.model, entity.id)
         if not role_orm:
-            raise EntityNotFoundError("Role", entity_id)
+            # Asegúrate que EntityNotFoundError pueda tomar estos argumentos o ajústalo
+            raise EntityNotFoundError(entity="Rol", entity_id=entity.id)
 
+        role_orm.name = entity.name
+        role_orm.description = entity.description or "" # Asegurar que no sea None si el ORM no lo permite
+        # role_orm.permissions = entity.permissions # Omitir si no se maneja
+        # updated_at se manejará automáticamente si está configurado en el modelo ORM
+
+        await self.db.commit()
+        await self.db.refresh(role_orm)
+        return self._to_domain(role_orm)
+
+    async def delete(self, entity_id: UUID) -> None: # Ajustado a la interfaz IRepository
+        role_orm = await self.db.get(self.model, entity_id)
+        if not role_orm:
+            raise EntityNotFoundError(entity="Rol", entity_id=str(entity_id))
         await self.db.delete(role_orm)
         await self.db.commit()
 
     async def count(self, **filters: Any) -> int:
         query = select(self.model)
-        # Aquí podrías aplicar filtros si quieres
+        for field, value in filters.items():
+            if not hasattr(self.model, field):
+                raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
+            query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
-        roles = result.scalars().all()
-        return len(roles)
+        return len(result.scalars().all())
 
     async def exists(self, **filters: Any) -> bool:
         query = select(self.model)
-        # Aquí podrías aplicar filtros si quieres
+        for field, value in filters.items():
+            if not hasattr(self.model, field):
+                raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
+            query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
-        role = result.scalar_one_or_none()
-        return role is not None
+        return result.scalar_one_or_none() is not None
 
-    async def get_by_field(self, field_name: str, value: Any) -> Optional[Role]:
+    async def get_by_field(self, field_name: str, value: Any) -> Optional[RoleDomain]:
         # Implementación basada en la lógica de otros repositorios
         if not hasattr(self.model, field_name):
             # Opcionalmente, podrías querer que esto devuelva None o lance un error más específico
@@ -79,23 +108,25 @@ class RoleRepositoryImpl(IRoleRepository):
             raise ValueError(f"El campo '{field_name}' no existe en el modelo {self.model.__name__}")
         query = select(self.model).where(getattr(self.model, field_name) == value)
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        role_orm = result.scalar_one_or_none()
+        return self._to_domain(role_orm) if role_orm else None
 
-    async def filter_by(self, **filters: Any) -> list[Role]:
+    async def filter_by(self, **filters: Any) -> Sequence[RoleDomain]:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
                 raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
             query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
-        return list(result.scalars().all())
+        return [self._to_domain(role_orm) for role_orm in result.scalars().all()]
 
-    async def get_by_name(self, name: str) -> Optional[Role]:
+    async def get_by_name(self, name: str) -> Optional[RoleDomain]:
         query = select(self.model).where(self.model.name == name)
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        role_orm = result.scalar_one_or_none()
+        return self._to_domain(role_orm) if role_orm else None
 
-    async def get_default_roles(self) -> Sequence[Role]:
+    async def get_default_roles(self) -> Sequence[RoleDomain]:
         # Asumiendo que los roles por defecto tienen un flag o nombres específicos
         # Esta es una implementación stub, necesitarás definir la lógica
         # Por ejemplo, si tienes un campo 'is_default' en tu modelo RoleORM:
@@ -104,7 +135,7 @@ class RoleRepositoryImpl(IRoleRepository):
         # return list(result.scalars().all())
         raise NotImplementedError("get_default_roles no implementado")
 
-    async def get_by_permissions(self, permissions: Sequence[str]) -> Sequence[Role]:
+    async def get_by_permissions(self, permissions: Sequence[str]) -> Sequence[RoleDomain]:
         # Esta lógica puede ser compleja y depende de cómo almacenes los permisos
         # Por ejemplo, si los permisos son una lista de strings en una columna JSON
         # o una relación many-to-many con una tabla de Permisos.

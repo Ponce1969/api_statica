@@ -109,4 +109,28 @@ class UserRepository(IUserRepository):
         raise NotImplementedError()
 
     async def update(self, entity: User) -> User:
-        raise NotImplementedError()
+        # Implementación de update pendiente, similar a otros repositorios
+        user_orm = await self.db.get(self.model, entity.id)
+        if not user_orm:
+            raise EntityNotFoundError(entity="User", entity_id=str(entity.id))
+
+        # Actualizar campos. Asegúrate de que los campos de 'entity' (User de dominio)
+        # se mapeen correctamente a 'user_orm' (UserORM)
+        user_orm.email = entity.email
+        user_orm.full_name = entity.full_name
+        user_orm.is_active = entity.is_active
+        # user_orm.is_superuser = entity.is_superuser # Si es necesario
+        # Si hashed_password se puede actualizar aquí, añádelo.
+        # Normalmente, la actualización de contraseña tiene un flujo dedicado.
+        # user_orm.hashed_password = entity.hashed_password 
+
+        await self.db.commit()
+        await self.db.refresh(user_orm)
+        return self._to_domain(user_orm)
+
+    async def delete(self, entity_id: UUID) -> None:
+        user_orm = await self.db.get(self.model, entity_id)
+        if not user_orm:
+            raise EntityNotFoundError(entity="User", entity_id=str(entity_id))
+        await self.db.delete(user_orm)
+        await self.db.commit()
