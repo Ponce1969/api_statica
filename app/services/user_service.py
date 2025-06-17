@@ -5,9 +5,8 @@ Contiene la lógica de negocio relacionada con usuarios, separada del acceso a d
 y de la presentación (API).
 """
 from collections.abc import Sequence
+from typing import Any
 from uuid import UUID
-
-from typing import Any, Sequence
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User
@@ -82,7 +81,9 @@ class UserService:
         """
         return await self.user_repository.get_active()
 
-    async def create_user_with_hashed_password(self, user_in: UserCreate) -> UserResponse:
+    async def create_user_with_hashed_password(
+        self, user_in: UserCreate
+    ) -> UserResponse:
         """
         Crea un usuario con la contraseña hasheada y valida unicidad de email.
         Args:

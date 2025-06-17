@@ -1,6 +1,5 @@
 import os
 import secrets
-from typing import List
 
 from pydantic import EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,7 +9,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # JWT settings
-    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32), min_length=32)
+    SECRET_KEY: str = Field(
+        default_factory=lambda: secrets.token_urlsafe(32), min_length=32
+    )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 días
     ALGORITHM: str = "HS256"
     
@@ -37,7 +38,10 @@ class Settings(BaseSettings):
         raise ValueError(f"Valor inválido para CORS_ORIGINS: {v}")
 
     # Superuser settings
-    FIRST_SUPERUSER: EmailStr = Field(default="admin@example.com", description="Email del superusuario inicial")
+    FIRST_SUPERUSER: EmailStr = Field(
+        default="admin@example.com", 
+        description="Email superusuario inicial"
+    )
     FIRST_SUPERUSER_PASSWORD: str = Field(default="password123", min_length=8)
 
     model_config = SettingsConfigDict(

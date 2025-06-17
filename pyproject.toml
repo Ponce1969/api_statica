@@ -1,12 +1,13 @@
 [tool.ruff]
-# Enable flake8-bugbear (`B`) rules.
-select = ["E", "F", "B", "I", "N", "UP", "ANN", "PYI"]
-ignore = ["ANN101"]  # Missing type annotation for `self` in method
-
 # Same as Black.
 line-length = 88
-indent-width = 4
+indent-width = 4  # Mantenido aquí
 target-version = "py312"
+
+[tool.ruff.lint]
+# Enable flake8-bugbear (`B`) rules.
+select = ["E", "F", "B", "I", "N", "UP", "ANN", "PYI"]
+ignore = []  # ANN101 removed
 
 [tool.ruff.format]
 # Use single quotes for string literals.

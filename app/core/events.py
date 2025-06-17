@@ -4,8 +4,9 @@ Estos eventos se ejecutan durante la inicialización (startup) y finalización (
 de la aplicación, permitiendo realizar tareas como establecer/cerrar conexiones a la DB.
 """
 import logging
-from sqlalchemy.exc import SQLAlchemyError
+
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database.session import AsyncSessionLocal
 
@@ -23,7 +24,7 @@ async def startup_event() -> None:
         async with AsyncSessionLocal() as db:
             await db.execute(text("SELECT 1"))
         logger.info("✅ Conexión a la base de datos verificada correctamente")
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         logger.error("❌ Error al conectar a la base de datos", exc_info=True)
         raise
 

@@ -5,7 +5,6 @@ Contiene la lógica de negocio relacionada con contactos, separada del acceso a 
 y de la presentación (API).
 """
 from collections.abc import Sequence
-from typing import List
 from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError
@@ -38,9 +37,12 @@ class ContactService:
             raise EntityNotFoundError(entity="Contacto", entity_id=contact_id)
         return contact
     
-    async def get_contacts(self, email: str | None = None, is_read: bool | None = None) -> List[ContactResponse]:
+    async def get_contacts(
+        self, email: str | None = None, is_read: bool | None = None
+    ) -> list[ContactResponse]:
         """
-        Devuelve una lista de ContactResponse (schema), con filtros opcionales por email y estado leído.
+        Devuelve una lista de ContactResponse (schema), con filtros opcionales
+        por email y estado leído.
         
         Args:
             email: Email opcional para filtrar contactos
@@ -53,11 +55,17 @@ class ContactService:
 
         # Lógica de filtrado combinable
         if email is not None and is_read is not None:
-            contacts = [c for c in await self.contact_repository.list() if c.email == email and c.is_read == is_read]
+            all_contacts = await self.contact_repository.list()
+            contacts = [
+                c for c in all_contacts if c.email == email and c.is_read == is_read
+            ]
         elif email is not None:
-            contacts = [c for c in await self.contact_repository.list() if c.email == email]
+            all_contacts = await self.contact_repository.list()
+            contacts = [c for c in all_contacts if c.email == email]
         elif is_read is not None:
-            contacts = [c for c in await self.contact_repository.list() if c.is_read == is_read]
+            contacts = [
+                c for c in await self.contact_repository.list() if c.is_read == is_read
+            ]
         else:
             contacts = list(await self.contact_repository.list())
         return [ContactResponse(
@@ -152,7 +160,9 @@ class ContactService:
         
         await self.contact_repository.delete(contact_id)
     
-    async def update_contact_message(self, contact_id: UUID, new_message: str) -> Contact:
+    async def update_contact_message(
+        self, contact_id: UUID, new_message: str
+    ) -> Contact:
         """
         Actualiza el mensaje de un contacto.
         

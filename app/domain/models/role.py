@@ -3,7 +3,7 @@ Modelo de dominio para la entidad Rol.
 Este modelo representa el concepto de rol en el dominio de la aplicación,
 independientemente de la persistencia o infraestructura.
 """
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from uuid import UUID
 
 from app.domain.models.base import Entity

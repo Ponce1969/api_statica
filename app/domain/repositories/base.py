@@ -7,9 +7,9 @@ acceso a datos.
 """
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Any, Generic, TypeVar
 from uuid import UUID
-from datetime import datetime
 
 from app.domain.models.base import Entity
 from app.domain.models.contact import Contact

@@ -1,19 +1,17 @@
-from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.deps import get_role_service
 from app.schemas.role import RoleCreate, RoleResponse
 from app.services.role_service import RoleService
-from app.domain.models.role import Role
 
 router = APIRouter()
 
 @router.post("/", response_model=RoleResponse)
 async def create_role(
     role: RoleCreate,
-    service: RoleService = Depends(get_role_service),
+    service: RoleService = Depends(get_role_service),  # noqa: B008
 ) -> RoleResponse:
     role_domain = await service.create_role(role)
     # Convertir el modelo de dominio a esquema de respuesta
@@ -27,12 +25,12 @@ async def create_role(
 
 @router.get("/", response_model=list[RoleResponse])
 async def list_roles(
-    name: Optional[str] = Query(
+    name: str | None = Query(
         None,
         description="Filtrar roles por nombre exacto",
         example="admin"
     ),
-    service: RoleService = Depends(get_role_service),
+    service: RoleService = Depends(get_role_service),  # noqa: B008
 ) -> list[RoleResponse]:
     roles = await service.list_roles(name=name)
     # Convertir los modelos de dominio a esquemas de respuesta
@@ -47,7 +45,7 @@ async def list_roles(
 @router.get("/{role_id}", response_model=RoleResponse)
 async def get_role(
     role_id: UUID,
-    role_service: RoleService = Depends(get_role_service),
+    role_service: RoleService = Depends(get_role_service),  # noqa: B008
 ) -> RoleResponse:
     try:
         role = await role_service.get_role(role_id)

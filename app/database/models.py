@@ -14,7 +14,7 @@ class User(Base):
     """Modelo ORM para usuarios."""
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # id is now inherited from Base
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -32,7 +32,7 @@ class Role(Base):
     """Modelo ORM para roles."""
     __tablename__ = "roles"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # id is now inherited from Base
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
@@ -52,7 +52,7 @@ class UserRole(Base):
 class Contact(Base):
     """Modelo ORM para contactos."""
     __tablename__ = "contacts"
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # id is now inherited from Base
     name: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, nullable=True)

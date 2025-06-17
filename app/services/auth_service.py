@@ -1,6 +1,5 @@
-from typing import Dict, Any, Optional
 
-from app.core.security.hashing import verify_password, get_password_hash
+from app.core.security.hashing import verify_password
 from app.core.security.jwt import create_access_token
 from app.domain.exceptions.base import ValidationError
 from app.domain.models.user import User
@@ -17,6 +16,6 @@ class AuthService:
             raise ValidationError("Credenciales incorrectas")
         return user
 
-    def generate_token(self, user: User) -> Dict[str, str]:
+    def generate_token(self, user: User) -> dict[str, str]:
         access_token = create_access_token({"sub": str(user.id)})
         return {"access_token": access_token, "token_type": "bearer"}

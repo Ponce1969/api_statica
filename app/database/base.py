@@ -3,17 +3,32 @@ Base declarativa central para todos los modelos ORM.
 
 Todos los modelos deben heredar de `Base` para ser reconocidos por SQLAlchemy.
 """
-from typing import Any, ClassVar, Optional, Dict, List
+import uuid  # Added for default value of id
+from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Added for UUID type
+from sqlalchemy.orm import (  # Added Mapped, mapped_column
+    DeclarativeBase,
+    Mapped,
+    declared_attr,
+    mapped_column,
+)
 
 
 class Base(DeclarativeBase):
     """
     Clase base común para todos los modelos.
-    Provee nombre de tabla automático, representación y conversión a dict.
+    Provee nombre de tabla automático, representación, conversión a dict y una columna 'id' UUID por defecto.
     """
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        index=True,
+        comment="Identificador único universal para la entidad."
+    )
 
     @declared_attr.directive
     def __tablename__(cls) -> str:

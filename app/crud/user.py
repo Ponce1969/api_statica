@@ -1,14 +1,15 @@
-from typing import Optional, Sequence, Any
-from datetime import datetime, UTC
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User as UserORM
-from app.domain.repositories.base import IUserRepository
 from app.domain.exceptions.base import EntityNotFoundError
 from app.domain.models.user import User
-from app.crud.base import BaseRepository
+from app.domain.repositories.base import IUserRepository
 
 
 class UserRepository(IUserRepository):
@@ -37,14 +38,14 @@ class UserRepository(IUserRepository):
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(
             select(self.model).where(self.model.email == email)
         )
         user_orm = result.scalars().first()
         return self._to_domain(user_orm) if user_orm else None
 
-    async def get(self, entity_id: UUID) -> Optional[User]:
+    async def get(self, entity_id: UUID) -> User | None:
         """Obtiene un usuario por su ID."""
         user_orm = await self.db.get(self.model, entity_id)
         if not user_orm:
@@ -56,7 +57,7 @@ class UserRepository(IUserRepository):
         result = await self.db.execute(select(self.model))
         return [self._to_domain(user_orm) for user_orm in result.scalars().all()]
 
-    async def get_by_field(self, field_name: str, value: Any) -> Optional[User]:
+    async def get_by_field(self, field_name: str, value: Any) -> User | None:
         """Obtiene un usuario por un campo específico."""
         if not hasattr(self.model, field_name):
             raise ValueError(f"El campo {field_name} no existe en el modelo {self.model.__name__}")

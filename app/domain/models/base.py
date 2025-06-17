@@ -3,7 +3,7 @@ Modelos base del dominio.
 Estos modelos son independientes de la infraestructura y representan las entidades
 centrales de la aplicación y sus reglas de negocio.
 """
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 

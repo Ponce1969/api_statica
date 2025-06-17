@@ -1,8 +1,8 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from uuid import UUID
 
-from app.domain.models.base import AuditableEntity
 from app.domain.exceptions.base import StructuralValidationError
+from app.domain.models.base import AuditableEntity
 
 
 class User(AuditableEntity):

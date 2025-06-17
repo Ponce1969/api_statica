@@ -1,5 +1,5 @@
+
 from passlib.context import CryptContext
-from typing import Any
 
 # Contexto de hashing configurable
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
