@@ -35,7 +35,7 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
     """
 
     @abstractmethod
-    async def get(self, entity_id: UUID) -> T | None: # Usar Optional en lugar de T | None
+    async def get(self, entity_id: UUID) -> T | None:
         """
         Obtiene una entidad por su ID.
 
@@ -106,7 +106,7 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
         ...
 
     @abstractmethod
-    async def get_by_field(self, field_name: str, value: Any) -> T | None: # Usar Any para el valor del campo
+    async def get_by_field(self, field_name: str, value: Any) -> T | None:
         """
         Obtiene una entidad por un campo específico.
         Ideal para campos únicos.

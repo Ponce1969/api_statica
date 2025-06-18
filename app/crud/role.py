@@ -1,5 +1,6 @@
 from collections.abc import Sequence
-from typing import Any
+from datetime import date, datetime
+from typing import Any, Union
 from uuid import UUID
 
 from sqlalchemy import select
@@ -9,6 +10,9 @@ from app.database.models import Role
 from app.domain.exceptions.base import EntityNotFoundError  # Modelo de Dominio
 from app.domain.models.role import Role as RoleDomain
 from app.domain.repositories.base import IRoleRepository
+
+# Type alias for accepted query filter values
+AcceptedQueryTypes = str | int | bool | UUID | datetime | date | None
 
 
 class RoleRepositoryImpl(IRoleRepository):
@@ -76,48 +80,65 @@ class RoleRepositoryImpl(IRoleRepository):
         await self.db.refresh(role_orm)
         return self._to_domain(role_orm)
 
-    async def delete(self, entity_id: UUID) -> None: # Ajustado a la interfaz IRepository
+    # Ajustado a la interfaz IRepository
+    async def delete(self, entity_id: UUID) -> None:
         role_orm = await self.db.get(self.model, entity_id)
         if not role_orm:
             raise EntityNotFoundError(entity="Rol", entity_id=str(entity_id))
         await self.db.delete(role_orm)
         await self.db.commit()
 
-    async def count(self, **filters: Any) -> int:
+    async def count(self, **filters: AcceptedQueryTypes) -> int:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
-                raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
+                model_name = self.model.__name__
+                raise ValueError(
+                    f"El campo '{field}' no existe en el modelo {model_name}"
+                )
             query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
         return len(result.scalars().all())
 
-    async def exists(self, **filters: Any) -> bool:
+    async def exists(self, **filters: AcceptedQueryTypes) -> bool:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
-                raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
+                model_name = self.model.__name__
+                raise ValueError(
+                    f"El campo '{field}' no existe en el modelo {model_name}"
+                )
             query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
         return result.scalar_one_or_none() is not None
 
-    async def get_by_field(self, field_name: str, value: Any) -> RoleDomain | None:
+    async def get_by_field(
+        self, field_name: str, value: AcceptedQueryTypes
+    ) -> RoleDomain | None:
         # Implementación basada en la lógica de otros repositorios
         if not hasattr(self.model, field_name):
-            # Opcionalmente, podrías querer que esto devuelva None o lance un error más específico
-            # si el campo no es parte del modelo, en lugar de un ValueError genérico.
-            # Por ahora, mantenemos la consistencia con el ValueError si el campo no existe.
-            raise ValueError(f"El campo '{field_name}' no existe en el modelo {self.model.__name__}")
+            # Opcional: devolver None o lanzar error específico
+            # si el campo no es del modelo,
+            # en lugar de un ValueError genérico.
+            # Mantenemos ValueError por consistencia si el campo no existe.
+            model_name = self.model.__name__
+            raise ValueError(
+                f"El campo '{field_name}' no existe "
+                f"en el modelo {model_name}"
+            )
         query = select(self.model).where(getattr(self.model, field_name) == value)
         result = await self.db.execute(query)
         role_orm = result.scalar_one_or_none()
         return self._to_domain(role_orm) if role_orm else None
 
-    async def filter_by(self, **filters: Any) -> Sequence[RoleDomain]:
+    async def filter_by(self, **filters: AcceptedQueryTypes) -> Sequence[RoleDomain]:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
-                raise ValueError(f"El campo '{field}' no existe en el modelo {self.model.__name__}")
+                model_name = self.model.__name__
+                raise ValueError(
+                    f"El campo '{field}' no existe en el modelo {model_name}"
+                )
             query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
         return [self._to_domain(role_orm) for role_orm in result.scalars().all()]
@@ -137,9 +158,15 @@ class RoleRepositoryImpl(IRoleRepository):
         # return list(result.scalars().all())
         raise NotImplementedError("get_default_roles no implementado")
 
-    async def get_by_permissions(self, permissions: Sequence[str]) -> Sequence[RoleDomain]:
+    async def get_by_permissions(
+        self, permissions: Sequence[str]
+    ) -> Sequence[RoleDomain]:
         # Esta lógica puede ser compleja y depende de cómo almacenes los permisos
         # Por ejemplo, si los permisos son una lista de strings en una columna JSON
-        # o una relación many-to-many con una tabla de Permisos.
-        # query = select(self.model).where(self.model.permissions.contains(permissions)) # Ejemplo conceptual
+        # o una relación many-to-many con una
+        # tabla de Permisos.
+        # query = select(self.model).where(
+        #     self.model.permissions.contains(permissions)
+        # ) 
+        # Conceptual
         raise NotImplementedError("get_by_permissions no implementado")

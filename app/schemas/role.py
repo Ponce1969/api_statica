@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class RoleBase(BaseModel):
@@ -11,6 +11,7 @@ class RoleCreate(RoleBase):
     pass
 
 class RoleResponse(RoleBase):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
 
 class RoleList(BaseModel):

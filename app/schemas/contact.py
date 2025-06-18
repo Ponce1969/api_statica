@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class ContactBase(BaseModel):
@@ -13,6 +13,7 @@ class ContactCreate(ContactBase):
     pass
 
 class ContactResponse(ContactBase):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
 
 class ContactList(BaseModel):

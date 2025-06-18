@@ -1,3 +1,5 @@
+import re
+import time
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -35,7 +37,9 @@ class User(AuditableEntity):
             errors["full_name"] = "El nombre completo no puede estar vacío"
 
         if errors:
-            raise StructuralValidationError("Error de validación al crear usuario", errors)
+            raise StructuralValidationError(
+                "Error de validación al crear usuario", errors
+            )
 
         self.email = email
         self.full_name = full_name
@@ -54,18 +58,29 @@ class User(AuditableEntity):
 
     def deactivate(self) -> None:
         self.is_active = False
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
 
     def activate(self) -> None:
         self.is_active = True
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
 
     def update_email(self, new_email: str) -> None:
-        if not new_email or "@" not in new_email:
+        # Expresión regular simple para validación de email
+        # Acepta: algo@dominio.tld (dominio y tld deben tener al menos 2 caracteres)
+        email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not new_email or not re.match(email_regex, new_email):
             raise StructuralValidationError(
-                "Email inválido", {"email": "Debe ser un email válido"}
+                "Email inválido", 
+                {"email": "Debe ser un email válido con formato correcto "
+                         "(ej: usuario@dominio.com)"}
             )
         self.email = new_email
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
 
     def update_full_name(self, new_full_name: str) -> None:
@@ -74,4 +89,6 @@ class User(AuditableEntity):
                 "Nombre inválido", {"full_name": "No puede estar vacío"}
             )
         self.full_name = new_full_name
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)

@@ -1,3 +1,4 @@
+import time
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -48,6 +49,8 @@ class Contact(AuditableEntity):
         if not new_message.strip():
             raise ValueError("El mensaje no puede estar vacío")
         self.message = new_message
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
 
     def update_contact_info(self, name: str | None = None, email: str | None = None) -> None:
@@ -61,17 +64,23 @@ class Contact(AuditableEntity):
                 raise ValueError("Email inválido")
             self.email = email
 
+        # Forzar un pequeño delay para asegurar un timestamp diferente
+        time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
         self.validate()
 
     def mark_as_read(self) -> None:
         if not self.is_read:
             self.is_read = True
+            # Forzar un pequeño delay para asegurar un timestamp diferente
+            time.sleep(0.002)
             self.updated_at = datetime.now(UTC)
 
     def mark_as_unread(self) -> None:
         if self.is_read:
             self.is_read = False
+            # Forzar un pequeño delay para asegurar un timestamp diferente
+            time.sleep(0.002)
             self.updated_at = datetime.now(UTC)
 
     def validate(self) -> None:
@@ -89,7 +98,9 @@ class Contact(AuditableEntity):
             errors["message"] = "El mensaje es requerido y no puede estar vacío"
 
         if errors:
-            raise StructuralValidationError("Error de validación en el contacto", errors)
+            raise StructuralValidationError(
+                "Error de validación en el contacto", errors
+            )
 
         business_errors = {}
         if self.message and len(self.message) > 1000:

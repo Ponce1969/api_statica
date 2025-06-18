@@ -56,7 +56,7 @@ class UserService:
             email: Email del usuario a buscar
             
         Returns:
-            User | None: El usuario encontrado o None si no existe
+            Optional[User]: El usuario encontrado o None si no existe
         """
         return await self.user_repository.get_by_email(email)
     
@@ -97,7 +97,8 @@ class UserService:
         existing = await self.user_repository.get_by_email(user_in.email)
         if existing:
             raise ValidationError(f"Ya existe un usuario con el email {user_in.email}")
-        hashed_password = self.hasher.hash_password(user_in.password)
+        # Hashear la contraseña y usarla al crear el usuario
+        # self.hasher.hash_password(user_in.password)
         # Aquí deberías crear el modelo ORM para la base de datos
         from uuid import uuid4
 

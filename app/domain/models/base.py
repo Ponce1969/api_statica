@@ -69,4 +69,4 @@ class AuditableEntity(Entity):
     ) -> None:
         super().__init__(entity_id)
         self.created_at = created_at or datetime.now(UTC)
-        self.updated_at = updated_at
+        self.updated_at = updated_at or self.created_at

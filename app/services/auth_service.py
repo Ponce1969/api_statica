@@ -7,12 +7,14 @@ from app.domain.repositories.base import IUserRepository
 
 
 class AuthService:
-    def __init__(self, user_repository: IUserRepository):
+    def __init__(self, user_repository: IUserRepository) -> None:
         self.user_repository = user_repository
 
     async def authenticate_user(self, email: str, password: str) -> User:
         user = await self.user_repository.get_by_email(email)
-        if not user or not hasattr(user, 'hashed_password') or not verify_password(password, user.hashed_password):
+        if (not user or 
+            not hasattr(user, 'hashed_password') or 
+            not verify_password(password, user.hashed_password)):
             raise ValidationError("Credenciales incorrectas")
         return user
 

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
-from datetime import UTC, datetime
-from typing import Any
+from datetime import UTC, date, datetime
+from typing import Union
 from uuid import UUID
 
 from sqlalchemy import select
@@ -11,9 +11,12 @@ from app.domain.exceptions.base import EntityNotFoundError
 from app.domain.models.user import User
 from app.domain.repositories.base import IUserRepository
 
+# Type alias for accepted query filter values
+AcceptedQueryTypes = str | int | bool | UUID | datetime | date | None
+
 
 class UserRepository(IUserRepository):
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.model = UserORM
 
@@ -57,28 +60,38 @@ class UserRepository(IUserRepository):
         result = await self.db.execute(select(self.model))
         return [self._to_domain(user_orm) for user_orm in result.scalars().all()]
 
-    async def get_by_field(self, field_name: str, value: Any) -> User | None:
+    async def get_by_field(
+        self, field_name: str, value: AcceptedQueryTypes
+    ) -> User | None:
         """Obtiene un usuario por un campo específico."""
         if not hasattr(self.model, field_name):
-            raise ValueError(f"El campo {field_name} no existe en el modelo {self.model.__name__}")
+            model_name = self.model.__name__
+            raise ValueError(
+                f"El campo {field_name} no existe "
+                f"en el modelo {model_name}"
+            )
         query = select(self.model).where(getattr(self.model, field_name) == value)
         result = await self.db.execute(query)
         user_orm = result.scalar_one_or_none()
         return self._to_domain(user_orm) if user_orm else None
 
-    async def filter_by(self, **filters: Any) -> Sequence[User]:
+    async def filter_by(self, **filters: AcceptedQueryTypes) -> Sequence[User]:
         """Filtra usuarios basados en criterios."""
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
-                raise ValueError(f"El campo {field} no existe en el modelo {self.model.__name__}")
+                model_name = self.model.__name__
+                raise ValueError(
+                    f"El campo {field} no existe "
+                    f"en el modelo {model_name}"
+                )
             query = query.where(getattr(self.model, field) == value)
         result = await self.db.execute(query)
         return [self._to_domain(user_orm) for user_orm in result.scalars().all()]
 
     async def get_active(self) -> Sequence[User]:
         result = await self.db.execute(
-            select(self.model).where(self.model.is_active == True)
+            select(self.model).where(self.model.is_active)
         )
         users_orm = result.scalars().all()
         return [self._to_domain(user_orm) for user_orm in users_orm]
@@ -103,10 +116,10 @@ class UserRepository(IUserRepository):
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
-    async def count(self, **filters: Any) -> int:
+    async def count(self, **filters: AcceptedQueryTypes) -> int:
         raise NotImplementedError()
 
-    async def exists(self, *args: Any, **kwargs: Any) -> bool:
+    async def exists(self, **filters: AcceptedQueryTypes) -> bool:
         raise NotImplementedError()
 
     async def update(self, entity: User) -> User:
