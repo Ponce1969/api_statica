@@ -48,7 +48,12 @@ def create_app() -> FastAPI:
     # Ruta raíz para comprobar el funcionamiento básico
     @app.get("/")
     def root() -> dict[str, str]:
-        return {"message": "Sistema de contactos API. Dirígete a /docs para la documentación"}
+        return {
+            "message": (
+                "Sistema de contactos API. "
+                "Dirígete a /docs para la documentación"
+            )
+        }
     
     # Ruta healthcheck para monitoreo
     @app.get("/health")

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import Any, Union
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select

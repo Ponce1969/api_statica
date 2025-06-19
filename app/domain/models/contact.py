@@ -53,7 +53,11 @@ class Contact(AuditableEntity):
         time.sleep(0.002)
         self.updated_at = datetime.now(UTC)
 
-    def update_contact_info(self, name: str | None = None, email: str | None = None) -> None:
+    def update_contact_info(
+        self, 
+        name: str | None = None, 
+        email: str | None = None
+    ) -> None:
         if name is not None:
             if not name.strip():
                 raise ValueError("El nombre no puede estar vacío")
@@ -104,13 +108,18 @@ class Contact(AuditableEntity):
 
         business_errors = {}
         if self.message and len(self.message) > 1000:
-            business_errors["message"] = "El mensaje no puede exceder los 1000 caracteres"
+            business_errors["message"] = (
+                "El mensaje no puede exceder los 1000 caracteres"
+            )
 
         if self.email.endswith(".test"):
             business_errors["email"] = "No se permiten emails de prueba"
 
         if business_errors:
-            raise ValidationError("Error en reglas de negocio para el contacto", business_errors)
+            raise ValidationError(
+                "Error en reglas de negocio para el contacto", 
+                business_errors
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Contact):

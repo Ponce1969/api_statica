@@ -33,7 +33,11 @@ class EntityNotFoundError(DomainError):
         super().__init__(message)
         
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(entity={repr(self.entity)}, entity_id={repr(self.entity_id)})"
+        class_name = self.__class__.__name__
+        return (
+            f"{class_name}(entity={repr(self.entity)}, "
+            f"entity_id={repr(self.entity_id)})"
+        )
 
 
 class ValidationError(DomainError):
@@ -44,7 +48,8 @@ class ValidationError(DomainError):
         super().__init__(message)
         
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(message={repr(self.message)}, errors={repr(self.errors)})"
+        class_name = self.__class__.__name__
+        return f"{class_name}(message={repr(self.message)}, errors={repr(self.errors)})"
 
 
 class BusinessRuleViolationError(DomainError):
@@ -73,18 +78,36 @@ class UnauthorizedOperationError(DomainError):
         super().__init__(message)
         
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(operation={repr(self.operation)}, reason={repr(self.reason)})"
+        class_name = self.__class__.__name__
+        return (
+            f"{class_name}(operation={repr(self.operation)}, "
+            f"reason={repr(self.reason)})"
+        )
 
 
 class StructuralValidationError(ValidationError):
-    """Se lanza cuando fallan validaciones estructurales (datos faltantes o formato incorrecto)."""
+    """Se lanza cuando fallan validaciones estructurales.
     
-    def __init__(self, message: str = "Error en la estructura de los datos", errors: dict[str, str] | None = None) -> None:
+    Para datos faltantes o formato incorrecto.
+    """
+    
+    def __init__(
+        self, 
+        message: str = "Error en la estructura de los datos", 
+        errors: dict[str, str] | None = None
+    ) -> None:
         super().__init__(message, errors)
 
 
 class BusinessValidationError(ValidationError):
-    """Se lanza cuando fallan validaciones de reglas de negocio (valores inválidos según reglas)."""
+    """Se lanza cuando fallan validaciones de reglas de negocio.
     
-    def __init__(self, message: str = "Error en las reglas de validación de negocio", errors: dict[str, str] | None = None) -> None:
+    Para valores inválidos según reglas de negocio.
+    """
+    
+    def __init__(
+        self, 
+        message: str = "Error en las reglas de validación de negocio", 
+        errors: dict[str, str] | None = None
+    ) -> None:
         super().__init__(message, errors)

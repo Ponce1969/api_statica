@@ -4,34 +4,30 @@ Interfaces base para los repositorios.
 Los repositorios son abstracciones que ocultan los detalles de persistencia y
 proporcionan una interfaz orientada al dominio para realizar operaciones de
 acceso a datos.
+
+Estas interfaces definen los métodos que deben implementar los repositorios
+concretos, siguiendo el patrón Repository y el principio de inversión de
+dependencias (DIP) de SOLID.
 """
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from datetime import datetime
-from typing import Any, Generic, TypeVar
+from datetime import date, datetime
+from typing import Generic, TypeVar
 from uuid import UUID
 
-from app.domain.models.base import Entity
 from app.domain.models.contact import Contact
 from app.domain.models.role import Role
 from app.domain.models.user import User
 
-# Tipado genérico para entidades
-T = TypeVar('T', bound=Entity)
+# T es un tipo genérico que representa cualquier entidad de dominio
+T = TypeVar("T")
 
 
-class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que es una interfaz
+class IRepository(Generic[T], ABC):
     """
     Interfaz base para todos los repositorios.
-
-    Define un conjunto de operaciones comunes que todos los repositorios deben
-    implementar. Las implementaciones concretas pueden optar por implementar
-    directamente estos métodos o utilizar métodos auxiliares más específicos
-    según las necesidades.
-
-    Args genéricos:
-        T: Tipo de entidad con la que trabaja el repositorio, debe ser subclase
-           de Entity
+    
+    Renombrado a IRepository para indicar que es una interfaz.
     """
 
     @abstractmethod
@@ -46,7 +42,8 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             Optional[T]: La entidad encontrada o None si no existe
 
         Raises:
-            ValueError: Si el UUID proporcionado no es válido (manejo en implementación concreta)
+            ValueError: Si el UUID proporcionado no es válido 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -72,7 +69,8 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             T: La entidad creada con su ID asignado
 
         Raises:
-            ValueError: Si la entidad ya existe o tiene datos inválidos (manejo en implementación concreta)
+            ValueError: Si la entidad ya existe o tiene datos inválidos 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -88,7 +86,8 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             T: La entidad actualizada
 
         Raises:
-            ValueError: Si la entidad no existe o tiene datos inválidos (manejo en implementación concreta)
+            ValueError: Si la entidad no existe o tiene datos inválidos 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -101,12 +100,17 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             entity_id: ID de la entidad a eliminar
 
         Raises:
-            ValueError: Si el UUID proporcionado no es válido o la entidad no existe (manejo en implementación concreta)
+            ValueError: Si el UUID proporcionado no es válido o la entidad no existe 
+                (manejo en implementación concreta)
         """
         ...
 
     @abstractmethod
-    async def get_by_field(self, field_name: str, value: Any) -> T | None:
+    async def get_by_field(
+        self, 
+        field_name: str, 
+        value: str | float | bool | UUID | datetime | date | None
+    ) -> T | None:
         """
         Obtiene una entidad por un campo específico.
         Ideal para campos únicos.
@@ -119,12 +123,16 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             Optional[T]: La entidad encontrada o None si no existe
 
         Raises:
-            ValueError: Si el nombre del campo no existe en la entidad (manejo en implementación concreta)
+            ValueError: Si el nombre del campo no existe en la entidad 
+                (manejo en implementación concreta)
         """
         ...
 
     @abstractmethod
-    async def filter_by(self, **filters: Any) -> Sequence[T]: # Usar Any para los filtros
+    async def filter_by(
+        self,
+        **filters: str | float | bool | UUID | datetime | date | None
+    ) -> Sequence[T]:
         """
         Filtra entidades según criterios específicos.
 
@@ -135,12 +143,16 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             Sequence[T]: Secuencia de entidades que cumplen los criterios
 
         Raises:
-            ValueError: Si alguno de los campos de filtro no existe (manejo en implementación concreta)
+            ValueError: Si alguno de los campos de filtro no existe 
+                (manejo en implementación concreta)
         """
         ...
 
     @abstractmethod
-    async def exists(self, **criteria: Any) -> bool: # Usar Any para los criterios
+    async def exists(
+        self, 
+        **criteria: str | float | bool | UUID | datetime | date | None
+    ) -> bool:
         """
         Verifica si existe una entidad que cumpla los criterios especificados.
 
@@ -151,12 +163,16 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             bool: True si existe al menos una entidad, False en caso contrario
 
         Raises:
-            ValueError: Si alguno de los campos de criterio no existe (manejo en implementación concreta)
+            ValueError: Si alguno de los campos de criterio no existe 
+                (manejo en implementación concreta)
         """
         ...
 
     @abstractmethod
-    async def count(self, **filters: Any) -> int: # Usar Any para los filtros
+    async def count(
+        self, 
+        **filters: str | float | bool | UUID | datetime | date | None
+    ) -> int:
         """
         Cuenta el número de entidades que cumplen los criterios dados.
 
@@ -167,7 +183,8 @@ class IRepository(Generic[T], ABC): # Renombrado a IRepository para indicar que 
             int: Número de entidades que cumplen los criterios
 
         Raises:
-            ValueError: Si alguno de los campos de filtro no existe (manejo en implementación concreta)
+            ValueError: Si alguno de los campos de filtro no existe 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -180,7 +197,8 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
     """
 
     # Los métodos genéricos get y list ya están definidos en IRepository[User]
-    # Si no cambian la firma ni el comportamiento esperado, no es necesario re-declararlos aquí.
+    # Si no cambian la firma ni el comportamiento esperado, 
+    # no es necesario re-declararlos aquí.
     # Los dejo comentados para que veas que son redundantes si no añaden algo.
 
     # @abstractmethod
@@ -202,10 +220,12 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
             email: Dirección de email a buscar
 
         Returns:
-            Optional[User]: El usuario encontrado o None si no existe ninguno con ese email
+            Optional[User]: El usuario encontrado o None si no existe ninguno 
+                con ese email 
 
         Raises:
-            ValueError: Si el email proporcionado no es válido (manejo en implementación concreta)
+            ValueError: Si el email proporcionado no es válido 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -231,7 +251,8 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
             Sequence[User]: Secuencia de usuarios con el rol especificado
 
         Raises:
-            ValueError: Si el UUID del rol no es válido (manejo en implementación concreta)
+            ValueError: Si el UUID del rol no es válido 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -247,7 +268,8 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
             User: El usuario con la fecha de último login actualizada
 
         Raises:
-            ValueError: Si el UUID del usuario no es válido o el usuario no existe (manejo en implementación concreta)
+            ValueError: Si el UUID del usuario no es válido o el usuario no existe 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -275,7 +297,8 @@ class IRoleRepository(IRepository[Role], ABC): # Renombrado y hereda de IReposit
             Optional[Role]: El rol encontrado o None si no existe ninguno con ese nombre
 
         Raises:
-            ValueError: Si el nombre proporcionado está vacío (manejo en implementación concreta)
+            ValueError: Si el nombre proporcionado está vacío 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -303,7 +326,11 @@ class IRoleRepository(IRepository[Role], ABC): # Renombrado y hereda de IReposit
         ...
 
 
-class IContactRepository(IRepository[Contact], ABC): # Renombrado y hereda de IRepository
+class IContactRepository(IRepository[Contact], ABC):
+    """Interfaz específica para el repositorio de contactos.
+    
+    Renombrado y hereda de IRepository.
+    """
     """
     Interfaz específica para el repositorio de contactos.
 
@@ -327,7 +354,8 @@ class IContactRepository(IRepository[Contact], ABC): # Renombrado y hereda de IR
             Sequence[Contact]: Secuencia de contactos con el email especificado
 
         Raises:
-            ValueError: Si el email proporcionado no es válido (manejo en implementación concreta)
+            ValueError: Si el email proporcionado no es válido 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -353,7 +381,8 @@ class IContactRepository(IRepository[Contact], ABC): # Renombrado y hereda de IR
             Contact: El contacto actualizado
 
         Raises:
-            ValueError: Si el UUID del contacto no es válido o el contacto no existe (manejo en implementación concreta)
+            ValueError: Si el UUID del contacto no es válido o el contacto no existe 
+                (manejo en implementación concreta)
         """
         ...
 
@@ -372,6 +401,7 @@ class IContactRepository(IRepository[Contact], ABC): # Renombrado y hereda de IR
             Sequence[Contact]: Contactos creados en el rango especificado
 
         Raises:
-            ValueError: Si el formato de las fechas no es válido (manejo en implementación concreta)
+            ValueError: Si el formato de las fechas no es válido 
+                (manejo en implementación concreta)
         """
         ...

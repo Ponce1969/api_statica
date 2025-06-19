@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: fastapi_static_project
-Version: 0.1.0
-Summary: A FastAPI project with a static frontend.
-Provides-Extra: test
-Requires-Dist: pytest-asyncio; extra == "test"

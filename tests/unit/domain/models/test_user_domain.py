@@ -66,7 +66,10 @@ def test_create_user_invalid_email_empty() -> None:
     )
 
 def test_create_user_invalid_email_format() -> None:
-    """Test creating a User with an invalid email format raises StructuralValidationError."""
+    """Test creating a User with an invalid email format.
+    
+    Verifica que se lance StructuralValidationError con formato de email inválido.
+    """
     with pytest.raises(StructuralValidationError) as excinfo:
         User(email="invalidemail", full_name=VALID_FULL_NAME)
     assert "email" in excinfo.value.errors
@@ -85,7 +88,10 @@ def test_create_user_invalid_full_name_empty() -> None:
     )
 
 def test_create_user_invalid_full_name_whitespace() -> None:
-    """Test creating a User with a whitespace full_name raises StructuralValidationError."""
+    """Test creating a User con espacios en blanco como nombre.
+    
+    Verifica que se lance StructuralValidationError con full_name inválido.
+    """
     with pytest.raises(StructuralValidationError) as excinfo:
         User(email=VALID_EMAIL, full_name="   ")
     assert "full_name" in excinfo.value.errors
@@ -147,7 +153,11 @@ def test_update_email_invalid(invalid_email: str) -> None:
     with pytest.raises(StructuralValidationError) as excinfo:
         user.update_email(invalid_email)
     assert "email" in excinfo.value.errors
-    assert excinfo.value.errors["email"] == "Debe ser un email válido con formato correcto (ej: usuario@dominio.com)"
+    error_msg = (
+        "Debe ser un email válido con formato correcto "
+        "(ej: usuario@dominio.com)"
+    )
+    assert excinfo.value.errors["email"] == error_msg
 
 def test_update_full_name_valid() -> None:
     """Test updating full_name with a valid new name."""

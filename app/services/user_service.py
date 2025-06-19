@@ -5,7 +5,7 @@ Contiene la lógica de negocio relacionada con usuarios, separada del acceso a d
 y de la presentación (API).
 """
 from collections.abc import Sequence
-from typing import Any
+from typing import Protocol
 from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
@@ -19,7 +19,11 @@ from app.schemas.user import UserCreate, UserResponse
 class UserService:
     """Servicio para gestionar la lógica de negocio relacionada con usuarios."""
     
-    def __init__(self, user_repository: IUserRepository, hasher: Any = None) -> None:
+    def __init__(
+        self, 
+        user_repository: IUserRepository, 
+        hasher: Protocol | None = None
+    ) -> None:
         """
         Inicializa el servicio de usuarios.
         
@@ -60,7 +64,11 @@ class UserService:
         """
         return await self.user_repository.get_by_email(email)
     
-    async def get_users(self, email: str | None = None, is_active: bool | None = None) -> Sequence[User]:
+    async def get_users(
+        self, 
+        email: str | None = None, 
+        is_active: bool | None = None
+    ) -> Sequence[User]:
         """
         Obtiene la lista de usuarios, con filtros opcionales por email e is_active.
         """

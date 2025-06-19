@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
-from typing import Union
 from uuid import UUID
 
 from sqlalchemy import select

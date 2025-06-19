@@ -138,7 +138,8 @@ def test_contact_business_validation_message_too_long(
     with pytest.raises(ValidationError) as excinfo:
         contact.validate()
     assert "message" in excinfo.value.errors
-    assert excinfo.value.errors["message"] == "El mensaje no puede exceder los 1000 caracteres"
+    error_msg = "El mensaje no puede exceder los 1000 caracteres"
+    assert excinfo.value.errors["message"] == error_msg
 
 
 def test_contact_business_validation_email_domain_test(

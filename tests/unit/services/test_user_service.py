@@ -58,7 +58,11 @@ def sample_user_create_schema() -> UserCreate:
 
 
 @pytest.mark.asyncio
-async def test_get_user_found(user_service: UserService, mock_user_repo: AsyncMock, sample_user_domain: UserDomain) -> None:
+async def test_get_user_found(
+    user_service: UserService, 
+    mock_user_repo: AsyncMock, 
+    sample_user_domain: UserDomain
+) -> None:
     """Test get_user returns a user when found."""
     user_id = sample_user_domain.id
     mock_user_repo.get.return_value = sample_user_domain
@@ -70,7 +74,10 @@ async def test_get_user_found(user_service: UserService, mock_user_repo: AsyncMo
 
 
 @pytest.mark.asyncio
-async def test_get_user_not_found(user_service: UserService, mock_user_repo: AsyncMock) -> None:
+async def test_get_user_not_found(
+    user_service: UserService, 
+    mock_user_repo: AsyncMock
+) -> None:
     """Test get_user raises EntityNotFoundError when user is not found."""
     non_existent_id = uuid4()
     mock_user_repo.get.return_value = None
@@ -98,7 +105,10 @@ async def test_get_user_by_email_found(
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email_not_found(user_service: UserService, mock_user_repo: AsyncMock) -> None:
+async def test_get_user_by_email_not_found(
+    user_service: UserService, 
+    mock_user_repo: AsyncMock
+) -> None:
     """Test get_user_by_email returns None when user is not found."""
     non_existent_email = "nonexistent@example.com"
     mock_user_repo.get_by_email.return_value = None
@@ -110,7 +120,11 @@ async def test_get_user_by_email_not_found(user_service: UserService, mock_user_
 
 
 @pytest.mark.asyncio
-async def test_create_user_success(user_service: UserService, mock_user_repo: AsyncMock, sample_user_domain: UserDomain) -> None:
+async def test_create_user_success(
+    user_service: UserService, 
+    mock_user_repo: AsyncMock, 
+    sample_user_domain: UserDomain
+) -> None:
     """Test create_user successfully creates and returns a user."""
     mock_user_repo.get_by_email.return_value = None  # No existing user with this email
     mock_user_repo.create.return_value = sample_user_domain
@@ -123,7 +137,11 @@ async def test_create_user_success(user_service: UserService, mock_user_repo: As
 
 
 @pytest.mark.asyncio
-async def test_create_user_email_exists(user_service: UserService, mock_user_repo: AsyncMock, sample_user_domain: UserDomain) -> None:
+async def test_create_user_email_exists(
+    user_service: UserService, 
+    mock_user_repo: AsyncMock, 
+    sample_user_domain: UserDomain
+) -> None:
     """Test create_user raises ValidationError if email already exists."""
     mock_user_repo.get_by_email.return_value = sample_user_domain  # Email exists
 
@@ -132,6 +150,9 @@ async def test_create_user_email_exists(user_service: UserService, mock_user_rep
 
     mock_user_repo.get_by_email.assert_called_once_with(sample_user_domain.email)
     mock_user_repo.create.assert_not_called()
-    assert f"Ya existe un usuario con el email {sample_user_domain.email}" in str(excinfo.value)
+    error_msg = f"Ya existe un usuario con el email {sample_user_domain.email}"
+    assert error_msg in str(excinfo.value)
 
-# TODO: Add tests for get_users, get_active_users, create_user_with_hashed_password, update_user, delete_user, deactivate_user, activate_user, assign_role_to_user, remove_role_from_user
+# TODO: Add tests for get_users, get_active_users, create_user_with_hashed_password,
+# update_user, delete_user, deactivate_user, activate_user, assign_role_to_user,
+# remove_role_from_user
