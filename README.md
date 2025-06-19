@@ -34,7 +34,7 @@ La API sigue una arquitectura limpia (Clean Architecture) basada en principios S
 │   │   ├── exceptions.py           # Excepciones generales
 │   │   └── security/               # Seguridad (JWT, hashing, etc.)
 │   │       ├── jwt.py
-│   │       └── hashes.py
+│   │       └── hashing.py
 │   ├── database/                   # Configuración y modelos de la base de datos
 │   │   ├── base.py                 # Declaración de base SQLAlchemy
 │   │   ├── models.py               # Modelos ORM
@@ -50,31 +50,32 @@ La API sigue una arquitectura limpia (Clean Architecture) basada en principios S
 │   │   ├── role.py                 # Implementación concreta de repositorio de roles
 │   │   └── contact.py              # Implementación concreta de repositorio de contactos
 │   ├── schemas/                    # Modelos Pydantic para validación/serialización
-│   │   ├── user.py                 # Implementación concreta de repositorio de usuarios
-│   │   ├── role.py                 # Implementación concreta de repositorio de roles
-│   │   ├── contact.py              # Implementación concreta de repositorio de contactos
-│   │   └── token.py                # Implementación concreta de repositorio de tokens
+│   │   ├── user.py                 # Esquemas Pydantic para usuarios
+│   │   ├── role.py                 # Esquemas Pydantic para roles
+│   │   ├── contact.py              # Esquemas Pydantic para contactos
+│   │   └── token.py                # Esquemas Pydantic para tokens JWT
 │   ├── services/                   # Lógica de negocio (aplicación)
-│   │   ├── user_service.py         # Implementación concreta de repositorio de usuarios
-│   │   ├── role_service.py         # Implementación concreta de repositorio de roles
-│   │   ├── contact_service.py      # Implementación concreta de repositorio de contactos
-│   │   └── auth_service.py         # Implementación concreta de repositorio de autenticación
-│   ├── api/                        # Endpoints y routers
-│   │   └── v1/
-│   │       ├── api.py              # Incluye routers de endpoints
-│   │       └── endpoints/
-│   │           ├── users.py        # Implementación concreta de repositorio de usuarios
-│   │           ├── roles.py        # Implementación concreta de repositorio de roles
-│   │           ├── contacts.py     # Implementación concreta de repositorio de contactos
-│   │           └── auth.py         # Implementación concreta de repositorio de autenticación
-│   └── tests/                      # Pruebas automáticas
-│       └── __init__.py
+│   │   ├── user_service.py         # Servicios de aplicación para usuarios
+│   │   ├── role_service.py         # Servicios de aplicación para roles
+│   │   ├── contact_service.py      # Servicios de aplicación para contactos
+│   │   └── auth_service.py         # Servicios de aplicación para autenticación
+│   └── api/                        # Endpoints y routers
+│       └── v1/
+│           ├── api.py              # Incluye routers de endpoints
+│           └── endpoints/
+│               ├── users.py        # Endpoints HTTP para usuarios
+│               ├── roles.py        # Endpoints HTTP para roles
+│               ├── contacts.py     # Endpoints HTTP para contactos
+│               └── auth.py         # Endpoints HTTP para autenticación
 ```
+├── tests/                          # Pruebas automáticas
+│   └── __init__.py
 ├── .env.example                    # Variables de entorno de ejemplo
 ├── Dockerfile                      # Imagen Docker
 ├── docker-compose.yml              # Orquestación de servicios
 ├── requirements.txt                # Dependencias
-├── venv/                           # Entorno virtual (ignorado)
+├── conftest.py                     # Configuración de pytest
+├── .venv/                          # Entorno virtual (ignorado)
 └── README.md                       # Este archivo
 
 

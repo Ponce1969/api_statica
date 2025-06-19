@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual Environment (UV/venv)
+.venv/
+venv/
+ENV/
+.env
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Database
+*.sqlite3
+*.db
+
+# Docker
+.docker/
+docker-data/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Unit test / coverage reports
+.coverage.*
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Local development settings
+local_settings.py
+
+# Alembic migration versions (optional, depending on your needs)
+# alembic/versions/
+
+# Static files (if managed separately)
+static/
+media/
+
+# Temporary files
+tmp/
+temp/
+
+# Compiled JavaScript
+*.min.js
+
+# Generated documentation
+docs/_build/
+site/
+
+# Cache directories
+.cache/
+
+# UV specific
+.uv/

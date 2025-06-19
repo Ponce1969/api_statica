@@ -3,6 +3,7 @@ Gestión centralizada de la sesión de base de datos para SQLAlchemy.
 Incluye creación de engine asíncrono y dependencia para FastAPI.
 """
 from collections.abc import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
