@@ -18,10 +18,11 @@ class LoginRequest(BaseModel):
 async def login(
     data: LoginRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-) -> dict[str, str]:
+) -> Token:
     try:
         user = await auth_service.authenticate_user(data.email, data.password)
-        return auth_service.generate_token(user)
+        token_dict = auth_service.generate_token(user)
+        return Token(**token_dict)
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

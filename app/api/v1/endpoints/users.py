@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,7 +12,7 @@ router = APIRouter()
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_in: UserCreate,
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    user_service: Annotated[UserService, Depends(get_user_service)],  # noqa: B008
 ) -> UserResponse:
     try:
         user = await user_service.create_user_with_hashed_password(user_in)
@@ -29,9 +30,9 @@ async def create_user(
         ) from err
 
 
-
 @router.get("/", response_model=list[UserResponse])
 async def list_users(
+    user_service: Annotated[UserService, Depends(get_user_service)],  # noqa: B008
     email: str | None = Query(
         None,
         description="Filtrar usuarios por email exacto",
@@ -42,7 +43,6 @@ async def list_users(
         description="Filtrar por estado activo (True o False)",
         example=True
     ),
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
 ) -> list[UserResponse]:
     users = await user_service.get_users(email=email, is_active=is_active)
     return [UserResponse(id=u.id, email=u.email, full_name=u.full_name) for u in users]
@@ -50,7 +50,7 @@ async def list_users(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: UUID,
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    user_service: Annotated[UserService, Depends(get_user_service)],  # noqa: B008
 ) -> UserResponse:
     user = await user_service.get_user(user_id)
     return UserResponse(
@@ -63,7 +63,7 @@ async def get_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: UUID,
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    user_service: Annotated[UserService, Depends(get_user_service)],  # noqa: B008
 ) -> None:
     await user_service.delete_user(user_id)
     return None

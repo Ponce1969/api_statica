@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,7 +12,7 @@ router = APIRouter()
 @router.post("/", response_model=RoleResponse)
 async def create_role(
     role: RoleCreate,
-    service: RoleService = Depends(get_role_service),  # noqa: B008
+    service: Annotated[RoleService, Depends(get_role_service)],  # noqa: B008
 ) -> RoleResponse:
     role_domain = await service.create_role(role)
     # Convertir el modelo de dominio a esquema de respuesta
@@ -22,15 +23,14 @@ async def create_role(
     )
 
 
-
 @router.get("/", response_model=list[RoleResponse])
 async def list_roles(
+    service: Annotated[RoleService, Depends(get_role_service)],  # noqa: B008
     name: str | None = Query(
         None,
         description="Filtrar roles por nombre exacto",
         example="admin"
     ),
-    service: RoleService = Depends(get_role_service),  # noqa: B008
 ) -> list[RoleResponse]:
     roles = await service.list_roles(name=name)
     # Convertir los modelos de dominio a esquemas de respuesta
