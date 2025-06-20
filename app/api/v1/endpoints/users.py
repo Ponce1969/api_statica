@@ -3,9 +3,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.core.deps import get_user_service
+from app.core.deps import get_user_service, get_current_user
 from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import UserService
+from app.domain.models.user import User as UserDomain
 
 router = APIRouter()
 
@@ -67,3 +68,16 @@ async def delete_user(
 ) -> None:
     await user_service.delete_user(user_id)
     return None
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_current_user(
+    current_user: Annotated[UserDomain, Depends(get_current_user)],  # noqa: B008
+) -> UserResponse:
+    """Devuelve los datos del usuario autenticado."""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=getattr(current_user, "full_name", None),
+        is_active=getattr(current_user, "is_active", True),
+    )

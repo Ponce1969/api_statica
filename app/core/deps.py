@@ -1,14 +1,18 @@
 from collections.abc import AsyncGenerator
-
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
-from fastapi import Depends
+
+from fastapi import Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.contact import ContactRepository as ContactRepositoryImpl
 from app.crud.role import RoleRepositoryImpl
 from app.crud.user import UserRepository as UserRepositoryImpl
 from app.database.session import AsyncSessionLocal
-from app.domain.repositories.base import IContactRepository, IRoleRepository, IUserRepository
+from app.domain.repositories.base import (
+    IContactRepository,
+    IRoleRepository,
+    IUserRepository,
+)
 from app.services.auth_service import AuthService
 from app.services.contact_service import ContactService
 from app.services.role_service import RoleService
@@ -64,3 +68,29 @@ async def get_auth_service(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ) -> AsyncGenerator[AuthService, None]:
     yield AuthService(user_repository=user_repo)
+
+
+# ----------------------- Seguridad y autenticación -----------------------
+from app.core.security import oauth2_scheme
+from app.core.security.jwt import decode_access_token
+from app.domain.models.user import User
+
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
+) -> User:
+    """Devuelve el usuario autenticado a partir del JWT o lanza 401."""
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado",
+        )
+    user_id = payload.get("sub")
+    user = await user_repo.get(user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado",
+        )
+    return user

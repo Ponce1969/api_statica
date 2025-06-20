@@ -4,7 +4,6 @@ Incluye fixtures para la base de datos y sesiones.
 """
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import Any
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -12,7 +11,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
 from app.database.base import Base
-from app.database.session import AsyncSessionLocal
 from tests.integration.test_config import test_settings
 
 # Usar la URL de la base de datos de la configuración de test
@@ -56,7 +54,8 @@ async def setup_database() -> AsyncGenerator[None, None]:
 
 
 @pytest.fixture
-async def db_session(setup_database: Any) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(setup_database: None) -> AsyncGenerator[AsyncSession, None]:
+
     """
     Fixture para obtener una sesión de base de datos para los tests.
     Crea una transacción que se hace rollback al final de cada test.

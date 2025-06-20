@@ -3,7 +3,6 @@ Tests de integración para UserService.
 Estos tests prueban la interacción entre el servicio y la base de datos real.
 """
 import uuid
-from typing import Any
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -111,7 +110,9 @@ async def test_get_user_by_email_integration(
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email_not_found_integration(user_service: UserService) -> None:
+async def test_get_user_by_email_not_found_integration(
+    user_service: UserService,
+) -> None:
     """Test de integración para get_user_by_email cuando el usuario no existe."""
     # Act
     found_user = await user_service.get_user_by_email("nonexistent@example.com")
@@ -151,7 +152,8 @@ async def test_create_user_with_hashed_password_integration(
 async def test_create_user_with_hashed_password_email_exists_integration(
     user_service: UserService, sample_user: UserDomain
 ) -> None:
-    """Test de integración para create_user_with_hashed_password cuando el email ya existe."""
+    """Test de integración para create_user_with_hashed_password.
+    Caso: el email ya existe."""
     # Arrange
     user_create = UserCreate(
         email=sample_user.email,  # Email que ya existe
@@ -163,7 +165,10 @@ async def test_create_user_with_hashed_password_email_exists_integration(
     with pytest.raises(ValidationError) as excinfo:
         await user_service.create_user_with_hashed_password(user_create)
     
-    assert f"Ya existe un usuario con el email {sample_user.email}" in str(excinfo.value)
+    expected_msg = (
+        f"Ya existe un usuario con el email {sample_user.email}"
+    )
+    assert expected_msg in str(excinfo.value)
 
 
 @pytest.mark.asyncio
@@ -278,7 +283,10 @@ async def test_update_user_email_exists_integration(
     with pytest.raises(ValidationError) as excinfo:
         await user_service.update_user(sample_user.id, updated_data)
     
-    assert f"Ya existe un usuario con el email {inactive_user.email}" in str(excinfo.value)
+    expected_msg = (
+        f"Ya existe un usuario con el email {inactive_user.email}"
+    )
+    assert expected_msg in str(excinfo.value)
 
 
 @pytest.mark.asyncio
@@ -339,7 +347,9 @@ async def test_deactivate_user_integration(
 
 @pytest.mark.asyncio
 async def test_activate_user_integration(
-    user_service: UserService, inactive_user: UserDomain, user_repository: UserRepository
+    user_service: UserService,
+    inactive_user: UserDomain,
+    user_repository: UserRepository
 ) -> None:
     """Test de integración para activate_user."""
     # Act

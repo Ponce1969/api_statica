@@ -357,7 +357,8 @@ async def test_create_user_with_hashed_password_email_exists(
     mock_user_repo.get_by_email.return_value = sample_user_domain
     
     # Act & Assert
-    with pytest.raises(ValidationError, match=f"Ya existe un usuario con el email {user_create.email}"):
+    expected_msg = f"Ya existe un usuario con el email {user_create.email}"
+    with pytest.raises(ValidationError, match=expected_msg):
         await user_service.create_user_with_hashed_password(user_create)
     
     mock_user_repo.get_by_email.assert_called_once_with(user_create.email)
@@ -437,10 +438,14 @@ async def test_update_user_email_exists(
     )
     
     mock_user_repo.get.return_value = sample_user_domain
-    mock_user_repo.get_by_email.return_value = another_user  # Another user with this email
+    # Asignar otro usuario con el mismo email
+    mock_user_repo.get_by_email.return_value = another_user
     
     # Act & Assert
-    with pytest.raises(ValidationError, match=f"Ya existe un usuario con el email {updated_user.email}"):
+    expected_msg_dupl = (
+        f"Ya existe un usuario con el email {updated_user.email}"
+    )
+    with pytest.raises(ValidationError, match=expected_msg_dupl):
         await user_service.update_user(updated_user)
     
     mock_user_repo.get.assert_called_once_with(updated_user.id)
