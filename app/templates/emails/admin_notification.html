@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nuevo registro de usuario</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #4f46e5;
+      }
+      .card {
+        background: #f5f5f5;
+        padding: 1rem 1.5rem;
+        border-radius: 6px;
+      }
+      .card p {
+        margin: 0.3rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Nuevo usuario registrado</h1>
+      <p>Se ha registrado un nuevo usuario en la página de contactos:</p>
+      <div class="card">
+        <p><strong>Nombre:</strong> {{ full_name }}</p>
+        <p><strong>Email:</strong> {{ email }}</p>
+        <p><strong>Mensaje:</strong></p>
+        <p>{{ message }}</p>
+      </div>
+      <p>Saludos,<br />Sistema de notificaciones de {{ settings.PROJECT_NAME if settings else '' }}</p>
+    </div>
+  </body>
+</html>

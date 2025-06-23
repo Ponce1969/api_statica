@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro confirmado</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>¡Hola {{ full_name }}!</h1>
+    <p>
+      Te confirmamos que hemos recibido tu registro correctamente. Gracias por
+      unirte a nuestra comunidad.
+    </p>
+    <p>Un cordial saludo,<br />El equipo {{ settings.PROJECT_NAME if settings else '' }}</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nueva solicitud de contacto</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #111827;
+      }
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #4f46e5;
+      }
+      .card {
+        background: #f3f4f6;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+      }
+      .card p {
+        margin: 0.25rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Nueva solicitud de contacto</h1>
+      <p>Se ha recibido una nueva solicitud desde el formulario del sitio:</p>
+      <div class="card">
+        <p><strong>Nombre:</strong> {{ full_name }}</p>
+        <p><strong>Email:</strong> {{ email }}</p>
+        <p><strong>Teléfono:</strong> {{ phone }}</p>
+        <p><strong>Mensaje:</strong></p>
+        <p>{{ message }}</p>
+      </div>
+      <p style="margin-top:1rem">Saludos,<br />Sistema de notificaciones de {{ settings.PROJECT_NAME if settings else '' }}</p>
+    </div>
+  </body>
+</html>
