@@ -1,20 +1,30 @@
 from collections.abc import AsyncGenerator
-from typing import Annotated
-
+from datetime import datetime, timedelta, timezone
+from typing import Annotated, Any, AsyncGenerator, Optional
+from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import oauth2_scheme
+from app.core.security.jwt import decode_access_token
 from app.crud.contact import ContactRepository as ContactRepositoryImpl
+from app.crud.contact_request import (
+    InMemoryContactRequestRepository,
+    SQLAlchemyContactRequestRepository,
+)
 from app.crud.role import RoleRepositoryImpl
 from app.crud.user import UserRepository as UserRepositoryImpl
 from app.database.session import AsyncSessionLocal
+from app.domain.models.user import User
 from app.domain.repositories.base import (
     IContactRepository,
     IRoleRepository,
     IUserRepository,
 )
+from app.domain.repositories.contact_request import IContactRequestRepository
 from app.services.auth_service import AuthService
 from app.services.contact_service import ContactService
+from app.services.contact_request_service import ContactRequestService
 from app.services.role_service import RoleService
 from app.services.user_service import UserService
 
@@ -71,9 +81,6 @@ async def get_auth_service(
 
 
 # ----------------------- Seguridad y autenticación -----------------------
-from app.core.security import oauth2_scheme
-from app.core.security.jwt import decode_access_token
-from app.domain.models.user import User
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
@@ -94,3 +101,23 @@ async def get_current_user(
             detail="Usuario no encontrado",
         )
     return user
+
+# ------------------- ContactRequest dependencies -------------------
+async def get_contact_request_repository(
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> AsyncGenerator[IContactRequestRepository, None]:
+    # Para usar con base de datos real
+    if True:  # Establecer en True para usar PostgreSQL
+        yield SQLAlchemyContactRequestRepository(db=db)
+    else:
+        # Fallback a la versión en memoria para pruebas
+        yield InMemoryContactRequestRepository()
+
+
+async def get_contact_request_service(
+    repo: Annotated[IContactRequestRepository, Depends(get_contact_request_repository)],  # noqa: B008
+) -> AsyncGenerator[ContactRequestService, None]:
+    from app.infrastructure.email.smtp_email import SMTPEmailSender
+
+    email_sender = SMTPEmailSender()
+    yield ContactRequestService(repository=repo, email_sender=email_sender)

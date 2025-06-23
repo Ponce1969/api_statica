@@ -86,3 +86,6 @@ site/
 
 # UV specific
 .uv/
+
+# Create tables script
+create_tables.py

@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str = Field(
         default_factory=lambda: os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
     )
+
+    # SMTP / Email
+    SMTP_HOST: str | None = Field(default=None)
+    SMTP_PORT: int | None = Field(default=None)
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
+    SMTP_USERNAME: str | None = Field(default=None)
+    SMTP_PASSWORD: str | None = Field(default=None)
+    EMAILS_FROM_EMAIL: EmailStr | None = None
+    EMAILS_FROM_NAME: str | None = None
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost", "http://localhost:8000", "http://localhost:3000"]
@@ -49,7 +59,5 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore"
     )
-
-settings = Settings()
 
 settings = Settings()
