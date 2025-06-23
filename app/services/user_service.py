@@ -5,7 +5,7 @@ Contiene la lógica de negocio relacionada con usuarios, separada del acceso a d
 y de la presentación (API).
 """
 from collections.abc import Sequence
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
@@ -16,13 +16,20 @@ from app.domain.repositories.base import IUserRepository
 from app.schemas.user import UserCreate, UserResponse
 
 
+class PasswordHasher(Protocol):
+    """Protocolo para definir un hasher de contraseñas."""
+    
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool: ...
+    def get_password_hash(self, password: str) -> str: ...
+
+
 class UserService:
     """Servicio para gestionar la lógica de negocio relacionada con usuarios."""
     
     def __init__(
         self, 
         user_repository: IUserRepository, 
-        hasher: Protocol | None = None
+        hasher: PasswordHasher | None = None
     ) -> None:
         """
         Inicializa el servicio de usuarios.

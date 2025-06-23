@@ -86,3 +86,26 @@ class Contact(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC)
     )
+
+
+class ContactRequest(Base):
+    """Modelo ORM para solicitudes de contacto."""
+    __tablename__ = "contact_requests"
+
+    # id is now inherited from Base
+    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    is_processed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC)
+    )
+    
+    def __repr__(self) -> str:
+        return f"<ContactRequest {self.id}: {self.full_name}>"

@@ -11,7 +11,7 @@ from app.domain.models.user import User
 from app.domain.repositories.base import IUserRepository
 
 # Type alias for accepted query filter values
-AcceptedQueryTypes = str | int | bool | UUID | datetime | date | None
+AcceptedQueryTypes = str | float | bool | UUID | datetime | date | None
 
 
 class UserRepository(IUserRepository):
@@ -60,7 +60,7 @@ class UserRepository(IUserRepository):
         return [self._to_domain(user_orm) for user_orm in result.scalars().all()]
 
     async def get_by_field(
-        self, field_name: str, value: AcceptedQueryTypes
+        self, field_name: str, value: str | float | bool | UUID | datetime | date | None
     ) -> User | None:
         """Obtiene un usuario por un campo específico."""
         if not hasattr(self.model, field_name):
@@ -74,7 +74,7 @@ class UserRepository(IUserRepository):
         user_orm = result.scalar_one_or_none()
         return self._to_domain(user_orm) if user_orm else None
 
-    async def filter_by(self, **filters: AcceptedQueryTypes) -> Sequence[User]:
+    async def filter_by(self, **filters: str | float | bool | UUID | datetime | date | None) -> Sequence[User]:
         """Filtra usuarios basados en criterios."""
         query = select(self.model)
         for field, value in filters.items():
@@ -115,10 +115,10 @@ class UserRepository(IUserRepository):
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
-    async def count(self, **filters: AcceptedQueryTypes) -> int:
+    async def count(self, **filters: str | float | bool | UUID | datetime | date | None) -> int:
         raise NotImplementedError()
 
-    async def exists(self, **filters: AcceptedQueryTypes) -> bool:
+    async def exists(self, **filters: str | float | bool | UUID | datetime | date | None) -> bool:
         raise NotImplementedError()
 
     async def update(self, entity: User) -> User:

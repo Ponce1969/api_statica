@@ -12,7 +12,7 @@ from app.domain.models.role import Role as RoleDomain
 from app.domain.repositories.base import IRoleRepository
 
 # Type alias for accepted query filter values
-AcceptedQueryTypes = str | int | bool | UUID | datetime | date | None
+AcceptedQueryTypes = str | float | bool | UUID | datetime | date | None
 
 
 class RoleRepositoryImpl(IRoleRepository):
@@ -88,7 +88,7 @@ class RoleRepositoryImpl(IRoleRepository):
         await self.db.delete(role_orm)
         await self.db.commit()
 
-    async def count(self, **filters: AcceptedQueryTypes) -> int:
+    async def count(self, **filters: str | float | bool | UUID | datetime | date | None) -> int:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
@@ -100,7 +100,7 @@ class RoleRepositoryImpl(IRoleRepository):
         result = await self.db.execute(query)
         return len(result.scalars().all())
 
-    async def exists(self, **filters: AcceptedQueryTypes) -> bool:
+    async def exists(self, **filters: str | float | bool | UUID | datetime | date | None) -> bool:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
@@ -113,7 +113,7 @@ class RoleRepositoryImpl(IRoleRepository):
         return result.scalar_one_or_none() is not None
 
     async def get_by_field(
-        self, field_name: str, value: AcceptedQueryTypes
+        self, field_name: str, value: str | float | bool | UUID | datetime | date | None
     ) -> RoleDomain | None:
         # Implementación basada en la lógica de otros repositorios
         if not hasattr(self.model, field_name):
@@ -131,7 +131,7 @@ class RoleRepositoryImpl(IRoleRepository):
         role_orm = result.scalar_one_or_none()
         return self._to_domain(role_orm) if role_orm else None
 
-    async def filter_by(self, **filters: AcceptedQueryTypes) -> Sequence[RoleDomain]:
+    async def filter_by(self, **filters: str | float | bool | UUID | datetime | date | None) -> Sequence[RoleDomain]:
         query = select(self.model)
         for field, value in filters.items():
             if not hasattr(self.model, field):
