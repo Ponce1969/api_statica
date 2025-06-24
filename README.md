@@ -24,59 +24,65 @@ La API sigue una arquitectura limpia (Clean Architecture) basada en principios S
 
 ### Estructura de Directorios
 
-```
-├── app/
-│   ├── main.py                     # Punto de entrada de la aplicación FastAPI
-│   ├── core/                       # Configuración y utilidades globales
-│   │   ├── config.py               # Variables de entorno y settings
-│   │   ├── deps.py                 # Factories e inyección de dependencias
-│   │   ├── events.py               # Eventos de ciclo de vida
-│   │   ├── exceptions.py           # Excepciones generales
-│   │   └── security/               # Seguridad (JWT, hashing, etc.)
-│   │       ├── jwt.py
-│   │       └── hashing.py
-│   ├── database/                   # Configuración y modelos de la base de datos
-│   │   ├── base.py                 # Declaración de base SQLAlchemy
-│   │   ├── models.py               # Modelos ORM
-│   │   └── session.py              # Sesión de SQLAlchemy
-│   ├── domain/                     # Capa de dominio puro
-│   │   ├── exceptions/             # Excepciones de dominio
-│   │   ├── models/                 # Modelos de dominio (sin ORM)
-│   │   ├── repositories/           # Interfaces (puertos) de repositorios
-│   │   └── value_objects/          # Objetos de valor
-│   ├── crud/                       # Implementaciones concretas de repositorios (infraestructura)
-│   │   ├── base.py                 # Implementación base de repositorio
-│   │   ├── user.py                 # Implementación concreta de repositorio de usuarios
-│   │   ├── role.py                 # Implementación concreta de repositorio de roles
-│   │   └── contact.py              # Implementación concreta de repositorio de contactos
-│   ├── schemas/                    # Modelos Pydantic para validación/serialización
-│   │   ├── user.py                 # Esquemas Pydantic para usuarios
-│   │   ├── role.py                 # Esquemas Pydantic para roles
-│   │   ├── contact.py              # Esquemas Pydantic para contactos
-│   │   └── token.py                # Esquemas Pydantic para tokens JWT
-│   ├── services/                   # Lógica de negocio (aplicación)
-│   │   ├── user_service.py         # Servicios de aplicación para usuarios
-│   │   ├── role_service.py         # Servicios de aplicación para roles
-│   │   ├── contact_service.py      # Servicios de aplicación para contactos
-│   │   └── auth_service.py         # Servicios de aplicación para autenticación
-│   └── api/                        # Endpoints y routers
-│       └── v1/
-│           ├── api.py              # Incluye routers de endpoints
-│           └── endpoints/
-│               ├── users.py        # Endpoints HTTP para usuarios
-│               ├── roles.py        # Endpoints HTTP para roles
-│               ├── contacts.py     # Endpoints HTTP para contactos
-│               └── auth.py         # Endpoints HTTP para autenticación
-```
-├── tests/                          # Pruebas automáticas
-│   └── __init__.py
-├── .env.example                    # Variables de entorno de ejemplo
-├── Dockerfile                      # Imagen Docker
-├── docker-compose.yml              # Orquestación de servicios
-├── requirements.txt                # Dependencias
-├── conftest.py                     # Configuración de pytest
-├── .venv/                          # Entorno virtual (ignorado)
-└── README.md                       # Este archivo
+📦 app
+├── 📄 main.py                     # Punto de entrada actualizado con logging y middleware
+├── 📂 core                        # Configuración y utilidades globales
+│   ├── 📄 config.py
+│   ├── 📄 deps.py
+│   ├── 📄 events.py
+│   ├── 📄 exceptions.py
+│   └── 📂 security
+│       ├── 📄 jwt.py
+│       └── 📄 hashing.py
+├── 📂 domain                      # Capa de dominio puro
+│   ├── 📂 exceptions
+│   │   └── 📄 domain_exceptions.py
+│   ├── 📂 models
+│   │   └── 📄 user.py
+│   ├── 📂 repositories
+│   │   └── 📄 user_repository.py
+│   ├── 📂 value_objects
+│   │   └── 📄 email.py
+│   └── 📂 interfaces              # ✅ NUEVA ESTRUCTURA
+│       ├── 📂 http
+│       │   └── 📄 protocols.py    # Protocolos para middleware HTTP
+│       └── 📂 logging
+│           └── 📄 protocols.py    # Protocolos para logging
+├── 📂 infrastructure              # Implementaciones de infraestructura
+│   ├── 📂 email
+│   │   └── 📄 smtp_email.py
+│   └── 📂 adapters                # ✅ NUEVA ESTRUCTURA
+│       ├── 📂 http
+│       │   └── 📄 fastapi_middleware.py  # Middleware para FastAPI
+│       └── 📂 logging
+│           └── 📄 standard_logger.py     # Logger basado en biblioteca estándar
+├── 📂 database
+│   ├── 📄 base.py
+│   ├── 📄 models.py
+│   └── 📄 session.py
+├── 📂 crud
+│   ├── 📄 base.py
+│   ├── 📄 user.py
+│   ├── 📄 role.py
+│   └── 📄 contact.py
+├── 📂 schemas
+│   ├── 📄 user.py
+│   ├── 📄 role.py
+│   ├── 📄 contact.py
+│   └── 📄 token.py
+├── 📂 services
+│   ├── 📄 user_service.py
+│   ├── 📄 role_service.py
+│   ├── 📄 contact_service.py
+│   └── 📄 auth_service.py
+└── 📂 api
+    └── 📂 v1
+        ├── 📄 api.py
+        └── 📂 endpoints
+            ├── 📄 users.py
+            ├── 📄 roles.py
+            ├── 📄 contacts.py
+            └── 📄 auth.py
 
 
 ### Principios de Clean Architecture Aplicados
@@ -87,6 +93,7 @@ La implementación sigue una estructura de capas concéntricas donde las depende
    - Entidades puras sin acoplamientos a SQLAlchemy u otras tecnologías
    - Interfaces de repositorios (puertos) que definen contratos
    - Excepciones específicas del dominio
+   - Interfaces (protocolos) para servicios externos como logging y middleware
 
 2. **Capa de Aplicación**: Implementa los casos de uso (servicios) de la aplicación.
    - Orquesta entidades de dominio para implementar lógica de negocio
@@ -96,7 +103,66 @@ La implementación sigue una estructura de capas concéntricas donde las depende
 3. **Capa de Infraestructura**: Implementaciones técnicas concretas.
    - Modelos ORM que implementan persistencia
    - Implementaciones concretas de repositorios
+   - Adaptadores concretos para interfaces de dominio (logging, middleware)
    - Configuración de frameworks y bibliotecas
+
+### Sistema de Logging y Middleware
+
+La aplicación implementa un sistema profesional de logging y middleware siguiendo los principios de Clean Architecture y el patrón de puertos y adaptadores:
+
+#### Arquitectura de Logging
+
+1. **Interfaces (Puertos)**:
+   - Definidos en `app/domain/interfaces/logging/protocols.py`
+   - Incluye `LoggerProtocol` y `LoggerFactoryProtocol` para abstraer la implementación concreta
+   - Define niveles de log mediante un enum `LogLevel`
+
+2. **Adaptadores**:
+   - Implementados en `app/infrastructure/adapters/logging/standard_logger.py`
+   - `StandardLoggerFactory` configura el sistema de logging global
+   - `SensitiveDataFilter` protege datos sensibles en los logs (passwords, tokens, etc.)
+   - Control de verbosidad para bibliotecas externas (SQLAlchemy, SMTP)
+
+3. **Características**:
+   - Configuración diferenciada para entornos de desarrollo y producción
+   - Enmascaramiento automático de datos sensibles
+   - Control granular de niveles de log por componente
+   - Integración transparente con bibliotecas externas
+
+#### Arquitectura de Middleware
+
+1. **Interfaces (Puertos)**:
+   - Definidos en `app/domain/interfaces/http/protocols.py`
+   - Incluye `RequestProtocol`, `ResponseProtocol` y `MiddlewareProtocol`
+   - Define contratos para procesamiento de solicitudes HTTP
+
+2. **Adaptadores**:
+   - Implementados en `app/infrastructure/adapters/http/fastapi_middleware.py`
+   - `RequestLoggingMiddleware` para monitoreo y logging de solicitudes HTTP
+   - `FastAPIMiddlewareFactory` para configuración y gestión de middlewares
+   - Implementa correctamente el método `dispatch` requerido por Starlette/FastAPI
+
+3. **Características**:
+   - Generación de ID único para cada solicitud (UUID v4)
+   - Medición precisa de tiempos de respuesta en milisegundos
+   - Detección y alertas de respuestas lentas (configurable)
+   - Headers de diagnóstico (X-Request-ID, X-Process-Time)
+   - Exclusión configurable de rutas ("/docs", "/redoc", "/openapi.json", "/metrics", "/health")
+   - Compatibilidad total con Swagger UI y ReDoc
+
+#### Integración en la Aplicación
+
+Los sistemas de logging y middleware se integran en `main.py` durante la creación de la aplicación FastAPI:
+
+```python
+# Configuración de logging centralizada
+logging_config.setup_logging(settings.LOG_LEVEL)
+
+# Configuración de middlewares
+setup_middlewares(app)
+```
+
+Esta integración proporciona una configuración centralizada y coherente con los principios de Clean Architecture, facilitando el monitoreo, depuración y mantenimiento de la aplicación.
 
 4. **Capa de Presentación**: Adaptadores para interactuar con el mundo exterior.
    - Endpoints REST de FastAPI
