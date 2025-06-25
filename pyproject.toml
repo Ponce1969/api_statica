@@ -32,6 +32,9 @@ known-third-party = ["fastapi", "pydantic", "sqlalchemy"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.mypy]
 python_version = "3.12"
 disallow_untyped_defs = true

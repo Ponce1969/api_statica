@@ -7,7 +7,8 @@ import uuid
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import PasswordHasher
+from app.core.security.hashing import get_password_hash, verify_password
+from app.services.user_service import PasswordHasher
 from app.crud.user import UserRepository
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User as UserDomain
@@ -21,15 +22,22 @@ async def user_repository(db_session: AsyncSession) -> UserRepository:
     return UserRepository(db=db_session)
 
 
+class TestPasswordHasher(PasswordHasher):
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return verify_password(plain_password, hashed_password)
+
+    def get_password_hash(self, password: str) -> str:
+        return get_password_hash(password)
+
 @pytest.fixture
-def password_hasher() -> PasswordHasher:
-    """Fixture para crear un hasher de contraseñas real."""
-    return PasswordHasher()
+def password_hasher() -> TestPasswordHasher:
+    """Fixture para proporcionar una instancia de PasswordHasher para pruebas."""
+    return TestPasswordHasher()
 
 
 @pytest.fixture
 async def user_service(
-    user_repository: UserRepository, password_hasher: PasswordHasher
+    user_repository: UserRepository, password_hasher
 ) -> UserService:
     """Fixture para crear un UserService con un repositorio y hasher reales."""
     return UserService(user_repository=user_repository, hasher=password_hasher)
@@ -38,29 +46,31 @@ async def user_service(
 @pytest.fixture
 async def sample_user(user_repository: UserRepository) -> UserDomain:
     """Fixture para crear un usuario de prueba en la base de datos."""
+    test_password = "securepassword"
+    hashed_test_password = get_password_hash(test_password)
     user = UserDomain(
-        entity_id=uuid.uuid4(),
+        id=uuid.uuid4(),
         email="test@example.com",
         full_name="Test User",
         is_active=True,
-        is_superuser=False,
-        hashed_password="hashed_password_for_tests"
+        is_superuser=False
     )
-    return await user_repository.create(user)
+    return await user_repository.create(user, hashed_password=hashed_test_password)
 
 
 @pytest.fixture
 async def inactive_user(user_repository: UserRepository) -> UserDomain:
     """Fixture para crear un usuario inactivo de prueba en la base de datos."""
+    test_password = "securepassword"
+    hashed_test_password = get_password_hash(test_password)
     user = UserDomain(
-        entity_id=uuid.uuid4(),
+        id=uuid.uuid4(),
         email="inactive@example.com",
         full_name="Inactive User",
         is_active=False,
-        is_superuser=False,
-        hashed_password="hashed_password_for_tests"
+        is_superuser=False
     )
-    return await user_repository.create(user)
+    return await user_repository.create(user, hashed_password=hashed_test_password)
 
 
 @pytest.mark.asyncio
@@ -296,15 +306,16 @@ async def test_delete_user_integration(
     """Test de integración para delete_user."""
     # Arrange
     # Crear un usuario específico para este test
+    test_password = "securepassword"
+    hashed_test_password = get_password_hash(test_password)
     user = UserDomain(
-        entity_id=uuid.uuid4(),
+        id=uuid.uuid4(),
         email="to_delete@example.com",
         full_name="To Delete User",
         is_active=True,
-        is_superuser=False,
-        hashed_password="hashed_password_for_tests"
+        is_superuser=False
     )
-    created_user = await user_repository.create(user)
+    created_user = await user_repository.create(user, hashed_password=hashed_test_password)
     
     # Act
     await user_service.delete_user(created_user.id)

@@ -26,7 +26,7 @@ def test_create_role_all_fields() -> None:
     created_time = datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC)
 
     role = Role(
-        entity_id=role_id,
+        id=role_id,
         name=role_name,
         description=role_description,
         created_at=created_time,
@@ -65,6 +65,6 @@ def test_role_str_representation() -> None:
     """Test the __str__ method of the Role entity."""
     role_id = uuid4()
     role_name = "Viewer"
-    role = Role(name=role_name, entity_id=role_id)
+    role = Role(name=role_name, id=role_id)
     expected_str = f"Role(id={role_id}, name={role_name})"
     assert str(role) == expected_str

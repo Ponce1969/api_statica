@@ -18,7 +18,7 @@ def test_create_valid_user_instance() -> None:
     created_time = datetime.now(UTC)
     
     user = User(
-        entity_id=user_id,
+        id=user_id,
         email=VALID_EMAIL,
         full_name=VALID_FULL_NAME,
         created_at=created_time,
@@ -41,7 +41,7 @@ def test_create_user_with_all_fields() -> None:
     role_id_2 = uuid4()
     
     user = User(
-        entity_id=user_id,
+        id=user_id,
         email="superuser@example.com",
         full_name="Super User",
         is_active=False,

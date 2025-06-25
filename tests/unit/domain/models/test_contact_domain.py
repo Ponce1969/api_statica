@@ -40,11 +40,11 @@ def test_create_contact_minimal_valid_data(
 
 def test_create_contact_all_fields_provided() -> None:
     """Test creating a Contact with all fields provided."""
-    entity_id = uuid4()
+    id = uuid4()
     created_at = datetime.now(UTC) - timedelta(days=1)
     updated_at = datetime.now(UTC) - timedelta(hours=12)
     contact = Contact(
-        entity_id=entity_id,
+        id=id,
         full_name=VALID_FULL_NAME,
         email=VALID_EMAIL,
         message=VALID_MESSAGE,
@@ -52,7 +52,7 @@ def test_create_contact_all_fields_provided() -> None:
         updated_at=updated_at,
         is_read=True,
     )
-    assert contact.id == entity_id
+    assert contact.id == id
     assert contact.full_name == VALID_FULL_NAME
     assert contact.email == VALID_EMAIL
     assert contact.message == VALID_MESSAGE

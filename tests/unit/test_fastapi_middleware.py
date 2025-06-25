@@ -173,6 +173,9 @@ class TestRequestLoggingMiddleware:
             
             # Procesar la solicitud
             response = await middleware.process_request(mock_request, call_next)
+
+            # Verificar que se ha llamado a call_next con la solicitud
+            call_next.assert_called_once_with(mock_request)
             
             # Verificar que se ha registrado la finalización de la solicitud como lenta
             mock_logger.log.assert_called_once()
@@ -203,6 +206,12 @@ class TestRequestLoggingMiddleware:
             # Procesar la solicitud (debe lanzar la excepción)
             with pytest.raises(ValueError):
                 await middleware.process_request(mock_request, call_next)
+
+            # Verificar que se ha generado un ID único para la solicitud
+            assert mock_request.state.request_id == "12345678-1234-5678-1234-567812345678"
+            
+            # Verificar que se ha llamado a call_next con la solicitud
+            call_next.assert_called_once_with(mock_request)
             
             # Verificar que se ha registrado el error
             mock_logger.exception.assert_called_once()

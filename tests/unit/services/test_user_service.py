@@ -42,7 +42,7 @@ def user_service(
 def sample_user_domain() -> UserDomain:
     """Fixture for a sample User domain model."""
     return UserDomain(
-        entity_id=uuid4(),
+        id=uuid4(),
         email="test@example.com",
         full_name="Test User",
         is_active=True,
@@ -373,8 +373,7 @@ async def test_update_user_success(
 ) -> None:
     """Test update_user successfully updates a user."""
     # Arrange
-    updated_user = UserDomain(
-        entity_id=sample_user_domain.id,
+    user_update_data = UserUpdate(
         email="updated@example.com",
         full_name="Updated Name",
         is_active=sample_user_domain.is_active,
@@ -383,10 +382,10 @@ async def test_update_user_success(
     
     mock_user_repo.get.return_value = sample_user_domain
     mock_user_repo.get_by_email.return_value = None  # No user with the new email
-    mock_user_repo.update.return_value = updated_user
+    mock_user_repo.update.return_value = sample_user_domain # El mock debe devolver el user_domain original para que luego el servicio lo actualice
     
     # Act
-    result = await user_service.update_user(updated_user)
+    result = await user_service.update_user(sample_user_domain.id, user_update_data)
     
     # Assert
     assert result == updated_user
@@ -430,7 +429,7 @@ async def test_update_user_email_exists(
     )
     
     updated_user = UserDomain(
-        entity_id=sample_user_domain.id,
+        id=sample_user_domain.id,
         email="another@example.com",  # Email that already exists
         full_name=sample_user_domain.full_name,
         is_active=sample_user_domain.is_active,
@@ -502,7 +501,7 @@ async def test_deactivate_user_success(
     
     # Create a copy of the user that will be returned after deactivation
     deactivated_user = UserDomain(
-        entity_id=sample_user_domain.id,
+        id=sample_user_domain.id,
         email=sample_user_domain.email,
         full_name=sample_user_domain.full_name,
         is_active=False,
@@ -535,7 +534,7 @@ async def test_activate_user_success(
     
     # Create a copy of the user that will be returned after activation
     activated_user = UserDomain(
-        entity_id=inactive_user.id,
+        id=inactive_user.id,
         email=inactive_user.email,
         full_name=inactive_user.full_name,
         is_active=True,

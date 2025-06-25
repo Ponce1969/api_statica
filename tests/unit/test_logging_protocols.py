@@ -6,7 +6,7 @@ están correctamente definidos y cumplen con los estándares de tipado estricto.
 """
 
 import pytest
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from app.domain.interfaces.logging.protocols import LogLevel, LoggerProtocol, LoggerFactoryProtocol
 

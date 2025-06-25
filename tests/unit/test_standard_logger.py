@@ -125,7 +125,7 @@ class TestSensitiveDataFilter:
         
         # Verificar que se ha enmascarado el argumento sensible
         assert record.args[0] == "admin"
-        assert "secreto123" not in record.args
+        assert record.args[1] == filter.mask
 
 
 class TestStandardLoggerFactory:
