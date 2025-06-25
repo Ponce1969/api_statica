@@ -4,9 +4,10 @@ Define el contrato que cualquier implementación de remitente de correo electró
 Siguiendo Clean Architecture, la capa *dominio* posee los puertos y no depende de la infraestructura concreta.
 """
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 
+@runtime_checkable
 class EmailSender(Protocol):
     """Abstracción para un remitente de correo electrónico asíncrono."""
 

@@ -5,9 +5,10 @@ Este módulo define las interfaces para los componentes de middleware HTTP
 siguiendo los principios de Clean Architecture y el patrón de puertos y adaptadores.
 """
 
-from typing import Any, Awaitable, Callable, Dict, Optional, Protocol, Set, TypeVar
+from typing import Any, Awaitable, Callable, Dict, Optional, Protocol, Set, TypeVar, runtime_checkable
 
 
+@runtime_checkable
 class RequestResponseProtocol(Protocol):
     """Protocolo para objetos que tienen headers como diccionarios."""
     
@@ -17,6 +18,7 @@ class RequestResponseProtocol(Protocol):
         ...
 
 
+@runtime_checkable
 class RequestProtocol(RequestResponseProtocol, Protocol):
     """Protocolo para objetos de solicitud HTTP."""
     
@@ -36,6 +38,7 @@ class RequestProtocol(RequestResponseProtocol, Protocol):
         ...
 
 
+@runtime_checkable
 class ResponseProtocol(RequestResponseProtocol, Protocol):
     """Protocolo para objetos de respuesta HTTP."""
     
@@ -50,6 +53,7 @@ TRequest = TypeVar("TRequest", bound=RequestProtocol)
 TResponse = TypeVar("TResponse", bound=ResponseProtocol)
 
 
+@runtime_checkable
 class MiddlewareProtocol(Protocol):
     """Protocolo para middleware HTTP."""
     
@@ -71,6 +75,7 @@ class MiddlewareProtocol(Protocol):
         ...
 
 
+@runtime_checkable
 class MiddlewareFactoryProtocol(Protocol):
     """Protocolo para fábricas de middleware HTTP."""
     

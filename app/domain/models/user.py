@@ -19,14 +19,14 @@ class User(AuditableEntity):
         self,
         email: str,
         full_name: str,
-        entity_id: UUID | None = None,
+        id: UUID | None = None,
         is_active: bool = True,
         is_superuser: bool = False,
         role_ids: set[UUID] | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
     ) -> None:
-        super().__init__(entity_id, created_at, updated_at)
+        super().__init__(id, created_at, updated_at)
 
         errors = {}
 

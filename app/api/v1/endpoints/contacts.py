@@ -20,12 +20,12 @@ async def list_contacts(
     email: str | None = Query(
         None,
         description="Filtrar contactos por email exacto",
-        example="ejemplo@correo.com"
+        examples=["ejemplo@correo.com"]
     ),
     is_read: bool | None = Query(
         None,
         description="Filtrar por estado leído (True o False)",
-        example=True
+        examples=[True]
     ),
     service: ContactService = Depends(get_contact_service),  # noqa: B008
 ) -> list[ContactResponse]:

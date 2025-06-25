@@ -24,12 +24,12 @@ class Contact(AuditableEntity):
         full_name: str,
         email: str,
         message: str,
-        entity_id: UUID | None = None,
+        id: UUID | None = None, # Cambiado de entity_id a id
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
         is_read: bool = False
     ) -> None:
-        super().__init__(entity_id, created_at, updated_at)
+        super().__init__(id, created_at, updated_at) # Pasando id a la clase base
 
         if not full_name.strip():
             raise ValueError("El nombre no puede estar vacío")

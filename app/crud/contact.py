@@ -23,7 +23,7 @@ class ContactRepository(IContactRepository):
         """Convierte un modelo ORM ContactORM a un modelo de dominio ContactDomain."""
         # Mapeo de ContactORM a Contact (dominio)
         return ContactDomain(
-            entity_id=contact_orm.id,
+            id=contact_orm.id, # Cambiado de entity_id a id
             full_name=contact_orm.name,
             # Corregido de full_name a name según el ORM
             email=contact_orm.email,
@@ -114,6 +114,10 @@ class ContactRepository(IContactRepository):
 
     async def filter_by(self, **filters: object) -> Sequence[ContactDomain]:
         query = select(self.model)
+        # Mapear 'full_name' a 'name' para la consulta ORM
+        if "full_name" in filters:
+            filters["name"] = filters.pop("full_name")
+
         for field, value in filters.items():
             if not hasattr(self.model, field):
                 error_msg = (

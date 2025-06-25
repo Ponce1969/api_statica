@@ -9,7 +9,7 @@ from app.services.role_service import RoleService
 
 router = APIRouter()
 
-@router.post("/", response_model=RoleResponse)
+@router.post("/", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
 async def create_role(
     role: RoleCreate,
     service: Annotated[RoleService, Depends(get_role_service)],  # noqa: B008
@@ -29,7 +29,7 @@ async def list_roles(
     name: str | None = Query(
         None,
         description="Filtrar roles por nombre exacto",
-        example="admin"
+        examples=["admin"]
     ),
 ) -> list[RoleResponse]:
     roles = await service.list_roles(name=name)

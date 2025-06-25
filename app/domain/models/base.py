@@ -14,8 +14,8 @@ class Entity:
     """
     id: UUID
     
-    def __init__(self, entity_id: UUID | None = None) -> None:
-        self.id = entity_id or uuid4()
+    def __init__(self, id: UUID | None = None) -> None:
+        self.id = id or uuid4()
     
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Entity):
@@ -63,10 +63,10 @@ class AuditableEntity(Entity):
     
     def __init__(
         self, 
-        entity_id: UUID | None = None,
+        id: UUID | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None
     ) -> None:
-        super().__init__(entity_id)
+        super().__init__(id)
         self.created_at = created_at or datetime.now(UTC)
         self.updated_at = updated_at or self.created_at

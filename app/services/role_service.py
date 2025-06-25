@@ -78,7 +78,7 @@ class RoleService:
 
         from app.domain.models.role import Role
         role_domain = Role(
-            entity_id=uuid4(), 
+            id=uuid4(), 
             name=role_in.name, 
             description=role_in.description
         )

@@ -13,9 +13,12 @@ from app.domain.models.user import User
 from app.domain.repositories.base import IUserRepository
 
 # Importar los schemas para evitar forward references
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 
 
+from typing import runtime_checkable
+
+@runtime_checkable
 class PasswordHasher(Protocol):
     """Protocolo para definir un hasher de contraseñas."""
     
@@ -114,24 +117,23 @@ class UserService:
             raise ValidationError(f"Ya existe un usuario con el email {user_in.email}")
         # Hashear la contraseña y usarla al crear el usuario
         # self.hasher.hash_password(user_in.password)
-        # Aquí deberías crear el modelo ORM para la base de datos
-        from uuid import uuid4
+        if not self.hasher:
+            raise ValueError("PasswordHasher no está configurado en UserService.")
+        hashed_password = self.hasher.get_password_hash(user_in.password)
 
-        from app.domain.models.user import User
         user_domain = User(
-            entity_id=uuid4(),
             email=user_in.email,
             full_name=user_in.full_name or "",
             is_active=True,
             is_superuser=False
         )
-        await self.user_repository.create(user_domain)
-        # Construir el schema de respuesta
-        from app.schemas.user import UserResponse
+        created_user = await self.user_repository.create(user_domain, hashed_password=hashed_password)
         return UserResponse(
-            id=user_domain.id,
-            email=user_domain.email,
-            full_name=user_domain.full_name
+            id=created_user.id,
+            email=created_user.email,
+            full_name=created_user.full_name,
+            is_active=created_user.is_active,
+            is_superuser=created_user.is_superuser
         )
     
     async def create_user(self, user: User) -> User:
@@ -154,35 +156,44 @@ class UserService:
                 f"Ya existe un usuario con el email {user.email}"
             )
         
+        # Aquí no se maneja el hashed_password, asumiendo que este método
+        # se usa para crear usuarios sin contraseña (ej. por admin) o que
+        # el hashing se hizo antes de llamar a este método.
         return await self.user_repository.create(user)
     
-    async def update_user(self, user: User) -> User:
+    async def update_user(self, user_id: UUID, user_in: UserUpdate) -> User:
         """
         Actualiza un usuario existente.
         
         Args:
-            user: Usuario con los datos actualizados
+            user_id: ID del usuario a actualizar
+            user_in: Esquema con los datos a actualizar
             
         Returns:
             User: El usuario actualizado
             
         Raises:
-            EntityNotFoundException: Si no existe el usuario
+            EntityNotFoundError: Si no existe el usuario
+            ValidationError: Si el email ya existe en otro usuario
         """
-        # Verificar que el usuario existe
-        existing_user = await self.user_repository.get(user.id)
+        existing_user = await self.user_repository.get(user_id)
         if not existing_user:
-            raise EntityNotFoundError(entity="Usuario", entity_id=user.id)
-        
-        # Si se cambia el email, validar que no esté duplicado
-        if existing_user.email != user.email:
-            email_user = await self.user_repository.get_by_email(user.email)
-            if email_user:
+            raise EntityNotFoundError(entity="Usuario", entity_id=user_id)
+
+        # Si se proporciona un email y es diferente al actual, validar unicidad
+        if user_in.email and user_in.email != existing_user.email:
+            email_user = await self.user_repository.get_by_email(user_in.email)
+            if email_user and email_user.id != user_id:
                 raise ValidationError(
-                    f"Ya existe un usuario con el email {user.email}"
+                    f"Ya existe un usuario con el email {user_in.email}"
                 )
-        
-        return await self.user_repository.update(user)
+
+        # Actualizar los campos del usuario existente con los datos de user_in
+        update_data = user_in.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(existing_user, key, value)
+
+        return await self.user_repository.update(existing_user)
     
     async def delete_user(self, user_id: UUID) -> None:
         """

@@ -14,5 +14,9 @@ class RoleResponse(RoleBase):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
 
+class RoleUpdate(RoleBase):
+    name: str | None = None
+    description: str | None = None
+
 class RoleList(BaseModel):
     roles: list[RoleResponse]

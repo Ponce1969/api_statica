@@ -6,7 +6,7 @@ siguiendo los principios de Clean Architecture y el patrón de puertos y adaptad
 """
 
 from enum import Enum, auto
-from typing import Any, Dict, Protocol
+from typing import Any, Dict, Protocol, runtime_checkable
 
 
 class LogLevel(Enum):
@@ -19,6 +19,7 @@ class LogLevel(Enum):
     CRITICAL = auto()
 
 
+@runtime_checkable
 class LoggerProtocol(Protocol):
     """Protocolo para loggers."""
     
@@ -89,6 +90,7 @@ class LoggerProtocol(Protocol):
         ...
 
 
+@runtime_checkable
 class LoggerFactoryProtocol(Protocol):
     """Protocolo para fábricas de loggers."""
     

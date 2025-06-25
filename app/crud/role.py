@@ -25,7 +25,7 @@ class RoleRepositoryImpl(IRoleRepository):
         if role_orm is None:
             raise ValueError("role_orm no puede ser None para la conversión a dominio")
         return RoleDomain(
-            entity_id=role_orm.id,
+            id=role_orm.id, # Cambiado de entity_id a id
             name=role_orm.name,
             description=role_orm.description,
             # permissions y updated_at no están en el modelo de dominio Role

@@ -37,12 +37,12 @@ async def list_users(
     email: str | None = Query(
         None,
         description="Filtrar usuarios por email exacto",
-        example="ejemplo@correo.com"
+        examples=["ejemplo@correo.com"]
     ),
     is_active: bool | None = Query(
         None,
         description="Filtrar por estado activo (True o False)",
-        example=True
+        examples=[True]
     ),
 ) -> list[UserResponse]:
     users = await user_service.get_users(email=email, is_active=is_active)

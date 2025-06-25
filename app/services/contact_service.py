@@ -109,7 +109,7 @@ class ContactService:
             email=contact_in.email,
             message=contact_in.message or "",  # Asegura que nunca sea None
             is_read=contact_in.is_read or False,
-            entity_id=uuid4()
+            id=uuid4()
         )
         
         # Guardar usando el repositorio

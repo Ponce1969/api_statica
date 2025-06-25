@@ -21,10 +21,10 @@ class Role(Entity):
         self,
         name: str,
         description: str | None = None,
-        entity_id: UUID | None = None,
+        id: UUID | None = None, # Cambiado de entity_id a id
         created_at: datetime | None = None
     ) -> None:
-        super().__init__(entity_id)
+        super().__init__(id)
         self.name = name
         self.description = description
         self.created_at = created_at or datetime.now(UTC)

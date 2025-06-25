@@ -58,7 +58,7 @@ class IRepository(Generic[T], ABC):
         ...
 
     @abstractmethod
-    async def create(self, entity: T) -> T:
+    async def create(self, entity: T, hashed_password: str | None = None) -> T:
         """
         Crea una nueva entidad.
 

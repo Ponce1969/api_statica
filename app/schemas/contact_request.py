@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict
 
 
 class ContactRequestCreate(BaseModel):
     """Datos entrantes desde el formulario del frontend."""
 
-    full_name: str = Field(..., max_length=150, examples=["Juan Pérez"])
-    email: EmailStr = Field(..., examples=["juan@example.com"])
-    phone: str | None = Field(None, max_length=30, examples=["+54 11 5555-5555"])
-    message: str = Field(..., max_length=1000, examples=["Hola, tengo una consulta..."])
+    full_name: str = Field(..., max_length=150, json_schema_extra={"examples": ["Juan Pérez"]})
+    email: EmailStr = Field(..., json_schema_extra={"examples": ["juan@example.com"]})
+    phone: str | None = Field(None, max_length=30, json_schema_extra={"examples": ["+54 11 5555-5555"]})
+    message: str = Field(..., max_length=1000, json_schema_extra={"examples": ["Hola, tengo una consulta..."]})
 
 
 class ContactRequestResponse(BaseModel):
@@ -21,5 +22,4 @@ class ContactRequestResponse(BaseModel):
     email: EmailStr
     message: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
