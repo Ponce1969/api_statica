@@ -21,31 +21,34 @@ class UserRepository(IUserRepository):
 
     def _to_domain(self, user_orm: UserORM) -> User:
         return User(
-            entity_id=user_orm.id,
+            id=user_orm.id, # Cambiado de entity_id a id
             email=user_orm.email,
             full_name=user_orm.full_name or "",
             is_active=user_orm.is_active,
             is_superuser=bool(getattr(user_orm, 'is_superuser', False)),
         )
 
-    async def create(self, user: User) -> User:
+    async def create(self, user: User, hashed_password: str | None = None) -> User:
         user_orm = UserORM(
             email=user.email,
-            hashed_password=getattr(user, 'hashed_password', None),
+            hashed_password=hashed_password,
+            full_name=user.full_name,
             is_active=user.is_active,
             is_superuser=user.is_superuser,
         )
         self.db.add(user_orm)
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
-    async def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> tuple[User, str] | None:
         result = await self.db.execute(
             select(self.model).where(self.model.email == email)
         )
         user_orm = result.scalars().first()
-        return self._to_domain(user_orm) if user_orm else None
+        if user_orm:
+            return self._to_domain(user_orm), user_orm.hashed_password
+        return None
 
     async def get(self, entity_id: UUID) -> User | None:
         """Obtiene un usuario por su ID."""
@@ -111,7 +114,7 @@ class UserRepository(IUserRepository):
             raise ValueError(f"Usuario con ID {user_id} no encontrado")
 
         user_orm.updated_at = datetime.now(UTC)
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
@@ -137,7 +140,7 @@ class UserRepository(IUserRepository):
         # Normalmente, la actualización de contraseña tiene un flujo dedicado.
         # user_orm.hashed_password = entity.hashed_password 
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
@@ -146,4 +149,4 @@ class UserRepository(IUserRepository):
         if not user_orm:
             raise EntityNotFoundError(entity="User", entity_id=str(entity_id))
         await self.db.delete(user_orm)
-        await self.db.commit()
+        await self.db.flush()
