@@ -14,6 +14,7 @@ from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User as UserDomain
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.user_service import UserService
+from app.core.config import settings
 
 
 @pytest.fixture

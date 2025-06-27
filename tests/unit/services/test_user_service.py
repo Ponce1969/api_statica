@@ -7,7 +7,7 @@ import pytest
 from app.domain.exceptions.base import EntityNotFoundError, ValidationError
 from app.domain.models.user import User as UserDomain
 from app.domain.repositories.base import IUserRepository
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 from app.services.user_service import UserService
 
 # Configurar pytest-asyncio para los tests asíncronos
@@ -98,13 +98,16 @@ async def test_get_user_by_email_found(
     user_service: UserService, mock_user_repo: AsyncMock, sample_user_domain: UserDomain
 ) -> None:
     """Test get_user_by_email returns a user when found."""
-    email = sample_user_domain.email
+    # Configure mock to return the user directly (not a tuple)
     mock_user_repo.get_by_email.return_value = sample_user_domain
 
-    found_user = await user_service.get_user_by_email(email)
+    # Call the method under test
+    result = await user_service.get_user_by_email(sample_user_domain.email)
 
-    mock_user_repo.get_by_email.assert_called_once_with(email)
-    assert found_user == sample_user_domain
+    # Verify the repository was called correctly
+    mock_user_repo.get_by_email.assert_called_once_with(sample_user_domain.email)
+    # Verify the result is the expected user
+    assert result == sample_user_domain
 
 
 @pytest.mark.asyncio
@@ -113,13 +116,17 @@ async def test_get_user_by_email_not_found(
     mock_user_repo: AsyncMock
 ) -> None:
     """Test get_user_by_email returns None when user is not found."""
-    non_existent_email = "nonexistent@example.com"
+    # Configurar el mock para que devuelva None cuando el usuario no se encuentra
+    test_email = "nonexistent@example.com"
     mock_user_repo.get_by_email.return_value = None
-
-    found_user = await user_service.get_user_by_email(non_existent_email)
-
-    mock_user_repo.get_by_email.assert_called_once_with(non_existent_email)
-    assert found_user is None
+    
+    # Llamar al método bajo prueba
+    result = await user_service.get_user_by_email(test_email)
+    
+    # Verificar que el repositorio fue llamado correctamente
+    mock_user_repo.get_by_email.assert_called_once_with(test_email)
+    # Verificar que el resultado es None
+    assert result is None
 
 
 @pytest.mark.asyncio
@@ -354,7 +361,7 @@ async def test_create_user_with_hashed_password_email_exists(
         full_name="New User",
         password="password123"
     )
-    mock_user_repo.get_by_email.return_value = sample_user_domain
+    mock_user_repo.get_by_email.return_value = (sample_user_domain, "dummy_hashed_password")  # Email exists
     
     # Act & Assert
     expected_msg = f"Ya existe un usuario con el email {user_create.email}"
@@ -388,30 +395,32 @@ async def test_update_user_success(
     result = await user_service.update_user(sample_user_domain.id, user_update_data)
     
     # Assert
-    assert result == updated_user
-    mock_user_repo.get.assert_called_once_with(updated_user.id)
-    mock_user_repo.get_by_email.assert_called_once_with(updated_user.email)
-    mock_user_repo.update.assert_called_once_with(updated_user)
+    assert result == sample_user_domain # El servicio actualiza el objeto de dominio directamente
+    mock_user_repo.get.assert_called_once_with(sample_user_domain.id)
+    mock_user_repo.get_by_email.assert_called_once_with(user_update_data.email)
+    mock_user_repo.update.assert_called_once_with(sample_user_domain)
 
 
 @pytest.mark.asyncio
 async def test_update_user_not_found(
     user_service: UserService, 
-    mock_user_repo: AsyncMock
+    mock_user_repo: AsyncMock,
+    sample_user_domain: UserDomain
 ) -> None:
     """Test update_user raises error if user not found."""
     # Arrange
-    non_existent_user = UserDomain(
-        email="nonexistent@example.com",
-        full_name="Non Existent"
+    non_existent_id = uuid4()
+    user_update_data = UserUpdate(
+        email="updated@example.com",
+        full_name="Updated User"
     )
     mock_user_repo.get.return_value = None
     
     # Act & Assert
     with pytest.raises(EntityNotFoundError):
-        await user_service.update_user(non_existent_user)
+        await user_service.update_user(non_existent_id, user_update_data)
     
-    mock_user_repo.get.assert_called_once_with(non_existent_user.id)
+    mock_user_repo.get.assert_called_once_with(non_existent_id)
     mock_user_repo.update.assert_not_called()
 
 
@@ -428,8 +437,8 @@ async def test_update_user_email_exists(
         full_name="Another User"
     )
     
-    updated_user = UserDomain(
-        id=sample_user_domain.id,
+    # Create update data
+    user_update_data = UserUpdate(
         email="another@example.com",  # Email that already exists
         full_name=sample_user_domain.full_name,
         is_active=sample_user_domain.is_active,
@@ -437,18 +446,18 @@ async def test_update_user_email_exists(
     )
     
     mock_user_repo.get.return_value = sample_user_domain
-    # Asignar otro usuario con el mismo email
+    # Return another user with the same email
     mock_user_repo.get_by_email.return_value = another_user
     
     # Act & Assert
     expected_msg_dupl = (
-        f"Ya existe un usuario con el email {updated_user.email}"
+        f"Ya existe un usuario con el email {user_update_data.email}"
     )
     with pytest.raises(ValidationError, match=expected_msg_dupl):
-        await user_service.update_user(updated_user)
+        await user_service.update_user(sample_user_domain.id, user_update_data)
     
-    mock_user_repo.get.assert_called_once_with(updated_user.id)
-    mock_user_repo.get_by_email.assert_called_once_with(updated_user.email)
+    mock_user_repo.get.assert_called_once_with(sample_user_domain.id)
+    mock_user_repo.get_by_email.assert_called_once_with(user_update_data.email)
     mock_user_repo.update.assert_not_called()
 
 
