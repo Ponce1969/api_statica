@@ -4,6 +4,7 @@ from app.crud.contact import ContactRepository
 from app.schemas.contact import ContactCreate, ContactUpdate
 from app.domain.models.contact import Contact
 from uuid import UUID
+from app.domain.exceptions.base import EntityNotFoundError
 
 @pytest.mark.asyncio
 async def test_create_contact(db_session: AsyncSession):
@@ -51,6 +52,13 @@ async def test_delete_contact(db_session: AsyncSession):
 
     await contact_crud.delete(created_contact.id)
     assert await contact_crud.get(created_contact.id) is None
+
+@pytest.mark.asyncio
+async def test_delete_contact_not_found(db_session: AsyncSession):
+    contact_crud = ContactRepository(db_session)
+    non_existent_id = UUID("00000000-0000-0000-0000-000000000001") # Un ID que sabemos que no existe
+    with pytest.raises(EntityNotFoundError):
+        await contact_crud.delete(non_existent_id)
 
 @pytest.mark.asyncio
 async def test_get_multi_contacts(db_session: AsyncSession):

@@ -9,7 +9,7 @@ from app.core.security.hashing import get_password_hash # Import for setting up 
 
 @pytest.fixture
 async def auth_service_integration(db_session: AsyncSession) -> AuthService:
-    user_repository = UserRepository(User, db_session)
+    user_repository = UserRepository(db_session)
     return AuthService(user_repository=user_repository)
 
 @pytest.mark.asyncio
@@ -20,7 +20,7 @@ async def test_integration_authenticate_user_success(db_session: AsyncSession, a
     
     # Create user directly in DB for setup
     user_crud = UserRepository(db_session)
-    await user_crud.create(entity=User(email=email, full_name="Auth Test User"), hashed_password=hashed_password)
+    await user_crud.create(User(email=email, full_name="Auth Test User"), hashed_password=hashed_password)
 
     # Authenticate using the service
     authenticated_user = await auth_service_integration.authenticate_user(email, password)
@@ -39,7 +39,7 @@ async def test_integration_authenticate_user_incorrect_password(db_session: Asyn
     hashed_password = get_password_hash(password)
 
     user_crud = UserRepository(db_session)
-    await user_crud.create(entity=User(email=email, full_name="Wrong Pwd User"), hashed_password=hashed_password)
+    await user_crud.create(User(email=email, full_name="Wrong Pwd User"), hashed_password=hashed_password)
 
     with pytest.raises(ValidationError, match="Credenciales incorrectas"):
         await auth_service_integration.authenticate_user(email, "incorrect_password")
@@ -51,7 +51,7 @@ async def test_integration_generate_token(db_session: AsyncSession, auth_service
     hashed_password = get_password_hash(password)
 
     user_crud = UserRepository(db_session)
-    user = await user_crud.create(entity=User(email=email, full_name="Token User"), hashed_password=hashed_password)
+    user = await user_crud.create(User(email=email, full_name="Token User"), hashed_password=hashed_password)
 
     token_data = auth_service_integration.generate_token(user)
     assert "access_token" in token_data

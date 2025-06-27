@@ -7,7 +7,7 @@ from app.crud.role import RoleRepositoryImpl
 from app.domain.models.user import User
 from app.domain.models.role import Role
 from app.core.security.hashing import get_password_hash
-from app.database.models import user_roles
+from app.database.models import UserRole
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,20 +19,20 @@ async def get_admin_token(test_app: AsyncClient, db_session_e2e: AsyncSession):
     hashed_password = get_password_hash(password)
 
     user_repository = UserRepository(db=db_session_e2e)
-    role_repository = RoleRepositoryImpl(session=db_session_e2e)
+    role_repository = RoleRepositoryImpl(db=db_session_e2e)
 
     admin_user = await user_repository.create(
-        entity=User(email=email, full_name="Admin User E2E"),
+        User(email=email, full_name="Admin User E2E"),
         hashed_password=hashed_password
     )
 
     admin_role = await role_repository.get_by_name(name="admin")
     if not admin_role:
-        admin_role = await role_repository.create(entity=Role(name="admin", description="Administrator role"))
+        admin_role = await role_repository.create(Role(name="admin", description="Administrator role"))
 
     # Associate role with user
     if admin_user and admin_role:
-        stmt = insert(user_roles).values(user_id=admin_user.id, role_id=admin_role.id)
+        stmt = insert(UserRole.__table__).values(user_id=admin_user.id, role_id=admin_role.id)
         await db_session_e2e.execute(stmt)
         await db_session_e2e.commit()
         await db_session_e2e.refresh(admin_user)

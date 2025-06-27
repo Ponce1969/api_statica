@@ -40,8 +40,8 @@ async def test_integration_get_role_by_name(db_session: AsyncSession, role_servi
 
 @pytest.mark.asyncio
 async def test_integration_list_roles(db_session: AsyncSession, role_service_integration: RoleService):
-    await RoleRepositoryImpl(db_session).create(entity=Role(id=uuid4(), name="ListRole1", description="Desc1"))
-    await RoleRepositoryImpl(db_session).create(entity=Role(id=uuid4(), name="ListRole2", description="Desc2"))
+    await RoleRepositoryImpl(db_session).create(Role(id=uuid4(), name="ListRole1", description="Desc1"))
+    await RoleRepositoryImpl(db_session).create(Role(id=uuid4(), name="ListRole2", description="Desc2"))
 
     roles = await role_service_integration.list_roles()
     assert len(roles) >= 2 # May contain roles from other tests if not properly isolated
@@ -61,7 +61,7 @@ async def test_integration_create_role(db_session: AsyncSession, role_service_in
 @pytest.mark.asyncio
 async def test_integration_create_role_duplicate_name(db_session: AsyncSession, role_service_integration: RoleService):
     role_name = "DuplicateServiceRole"
-    await RoleRepositoryImpl(db_session).create(entity=Role(id=uuid4(), name=role_name, description="Original"))
+    await RoleRepositoryImpl(db_session).create(Role(id=uuid4(), name=role_name, description="Original"))
 
     role_in = RoleCreate(name=role_name, description="Attempt to duplicate")
     with pytest.raises(ValidationError, match=f"Ya existe un rol con el nombre {role_name}"):
@@ -70,7 +70,7 @@ async def test_integration_create_role_duplicate_name(db_session: AsyncSession, 
 @pytest.mark.asyncio
 async def test_integration_update_role(db_session: AsyncSession, role_service_integration: RoleService):
     original_role = Role(id=uuid4(), name="UpdateMe", description="Original Desc")
-    await RoleRepositoryImpl(db_session).create(entity=original_role)
+    await RoleRepositoryImpl(db_session).create(original_role)
 
     updated_role_data = Role(id=original_role.id, name="UpdatedServiceRole", description="Updated Desc")
     updated_role = await role_service_integration.update_role(updated_role_data)
@@ -85,8 +85,8 @@ async def test_integration_update_role(db_session: AsyncSession, role_service_in
 async def test_integration_update_role_name_conflict(db_session: AsyncSession, role_service_integration: RoleService):
     role1 = Role(id=uuid4(), name="RoleToUpdate", description="Desc1")
     role2 = Role(id=uuid4(), name="ExistingRoleName", description="Desc2")
-    await RoleRepositoryImpl(db_session).create(entity=role1)
-    await RoleRepositoryImpl(db_session).create(entity=role2)
+    await RoleRepositoryImpl(db_session).create(role1)
+    await RoleRepositoryImpl(db_session).create(role2)
 
     role_update_data = Role(id=role1.id, name="ExistingRoleName", description="Should fail")
     with pytest.raises(ValidationError, match="Ya existe un rol con el nombre ExistingRoleName"):
@@ -95,7 +95,7 @@ async def test_integration_update_role_name_conflict(db_session: AsyncSession, r
 @pytest.mark.asyncio
 async def test_integration_delete_role(db_session: AsyncSession, role_service_integration: RoleService):
     role_to_delete = Role(id=uuid4(), name="DeleteMe", description="To be deleted")
-    await RoleRepositoryImpl(db_session).create(entity=role_to_delete)
+    await RoleRepositoryImpl(db_session).create(role_to_delete)
 
     await role_service_integration.delete_role(role_to_delete.id)
     

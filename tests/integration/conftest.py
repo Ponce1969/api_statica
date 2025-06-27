@@ -6,6 +6,8 @@ import asyncio
 from collections.abc import AsyncGenerator
 
 import pytest
+import pytest_asyncio
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -13,12 +15,22 @@ from sqlalchemy.pool import NullPool
 from app.database.base import Base
 from tests.integration.test_config import test_settings
 
-# Usar la URL de la base de datos de la configuración de test
-TEST_DATABASE_URL = test_settings.SQLALCHEMY_DATABASE_URI
+# Usar un archivo temporal para SQLite en lugar de memoria compartida
+# Esto es más confiable en Windows que usar memoria compartida
+import tempfile
+import os
+
+# Crear un archivo temporal para la base de datos SQLite
+temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
+temp_db.close()
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{temp_db.name}"
 
 # Engine asíncrono para tests
 test_engine = create_async_engine(
-    TEST_DATABASE_URL, echo=False, poolclass=NullPool
+    TEST_DATABASE_URL,
+    echo=False,
+    poolclass=NullPool,
+    connect_args={"uri": True, "check_same_thread": False}
 )
 
 # Factory de sesiones asíncronas para tests
@@ -35,27 +47,33 @@ def event_loop() -> asyncio.AbstractEventLoop:
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def setup_database() -> AsyncGenerator[None, None]:
     """
     Fixture para configurar la base de datos de prueba.
-    Crea todas las tablas antes de los tests y las elimina después.
+    Crea todas las tablas antes de cada test.
+    La base de datos en memoria se limpiará automáticamente después de cada test.
     """
     # Crear todas las tablas
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     
-    yield
-    
-    # Eliminar todas las tablas
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    try:
+        yield
+    finally:
+        # Limpiar la base de datos después de cada test
+        async with test_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+        # Cerrar conexiones y eliminar archivo temporal
+        await test_engine.dispose()
+        try:
+            os.unlink(temp_db.name)
+        except:
+            pass
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(setup_database: None) -> AsyncGenerator[AsyncSession, None]:
-
     """
     Fixture para obtener una sesión de base de datos para los tests.
     Crea una transacción que se hace rollback al final de cada test.
@@ -64,8 +82,9 @@ async def db_session(setup_database: None) -> AsyncGenerator[AsyncSession, None]
         # Iniciar una transacción para cada test
         transaction = await session.begin()
         
-        yield session
-        
-        # Hacer rollback de la transacción al final del test
-        await transaction.rollback()
-        await session.close()
+        try:
+            yield session
+        finally:
+            # Hacer rollback de la transacción al final del test
+            await transaction.rollback()
+            await session.close()

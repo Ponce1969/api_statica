@@ -42,6 +42,7 @@ async def test_get_user_by_email(db_session: AsyncSession):
     created_user = await user_crud.create(user_domain, hashed_password=hashed_password)
 
     user = await user_crud.get_by_email(email="byemail@example.com")
+    assert user is not None
     assert user.email == "byemail@example.com"
 
 @pytest.mark.asyncio

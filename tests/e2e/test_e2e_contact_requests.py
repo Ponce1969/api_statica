@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.main import app
 from app.crud.user import UserRepository
 from app.domain.models.user import User
@@ -14,13 +15,13 @@ async def create_admin_user_and_token(db_session_e2e: AsyncSession, test_app: As
     password = "admin_password"
     hashed_password = get_password_hash(password)
     user_repository = UserRepository(db=db_session_e2e)
-    admin_user = await user_repository.create(entity=User(email=email, full_name="Admin Contact User"), hashed_password=hashed_password)
+    admin_user = await user_repository.create(User(email=email, full_name="Admin Contact User"), hashed_password=hashed_password)
 
     # Assign admin role (assuming role management is setup)
-    role_repository = RoleRepositoryImpl(session=db_session_e2e)
+    role_repository = RoleRepositoryImpl(db=db_session_e2e)
     admin_role = await role_repository.get_by_name(name="admin")
     if not admin_role:
-        admin_role = await role_repository.create(entity=Role(name="admin", description="Administrator"))
+        admin_role = await role_repository.create(Role(name="admin", description="Administrator"))
     
     admin_user.roles.append(admin_role)
     await db_session_e2e.commit()
@@ -37,6 +38,7 @@ async def create_admin_user_and_token(db_session_e2e: AsyncSession, test_app: As
 
 @pytest.mark.asyncio
 async def test_create_contact_request(test_app: AsyncClient):
+
     contact_data = {
         "full_name": "Test Contact",
         "email": "contact@example.com",
