@@ -133,7 +133,9 @@ class UserService:
             email=created_user.email,
             full_name=created_user.full_name,
             is_active=created_user.is_active,
-            is_superuser=created_user.is_superuser
+            is_superuser=created_user.is_superuser,
+            created_at=created_user.created_at,
+            updated_at=created_user.updated_at
         )
     
     async def create_user(self, user: User) -> User:

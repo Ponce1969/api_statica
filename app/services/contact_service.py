@@ -73,7 +73,9 @@ class ContactService:
             full_name=c.full_name,
             email=c.email,
             message=c.message,
-            is_read=c.is_read
+            is_read=c.is_read,
+            created_at=c.created_at,
+            updated_at=c.updated_at
         ) for c in contacts]
     
     async def get_contacts_by_email(self, email: str) -> Sequence[Contact]:
@@ -115,13 +117,15 @@ class ContactService:
         # Guardar usando el repositorio
         created = await self.contact_repository.create(contact)
         
-        # Convertir a schema de respuesta
+        # Convertir a schema de respuesta incluyendo los campos de auditoría
         return ContactResponse(
             id=created.id,
             full_name=created.full_name,
             email=created.email,
             message=created.message,
-            is_read=created.is_read
+            is_read=created.is_read,
+            created_at=created.created_at,
+            updated_at=created.updated_at
         )
     
     async def update_contact(self, contact: Contact) -> Contact:

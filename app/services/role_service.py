@@ -61,7 +61,13 @@ class RoleService:
         if name is not None:
             roles = [r for r in roles if r.name == name]
         return [
-            RoleResponse(id=r.id, name=r.name, description=r.description) 
+            RoleResponse(
+                id=r.id, 
+                name=r.name, 
+                description=r.description,
+                created_at=r.created_at,
+                updated_at=r.updated_at
+            )
             for r in roles
         ]
     
@@ -86,7 +92,9 @@ class RoleService:
         return RoleResponse(
             id=created.id, 
             name=created.name, 
-            description=created.description
+            description=created.description,
+            created_at=created.created_at,
+            updated_at=created.updated_at
         )
     
     async def update_role(self, role: Role) -> Role:

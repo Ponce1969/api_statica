@@ -11,12 +11,12 @@ class AuthService:
         self.user_repository = user_repository
 
     async def authenticate_user(self, email: str, password: str) -> User:
-        user_data = await self.user_repository.get_by_email(email)
-        if not user_data:
+        user = await self.user_repository.get_by_email(email)
+        if not user:
             raise ValidationError("Credenciales incorrectas")
         
-        user, hashed_password = user_data
-        if not verify_password(password, hashed_password):
+        hashed_password = await self.user_repository.get_hashed_password_by_email(email)
+        if not hashed_password or not verify_password(password, hashed_password):
             raise ValidationError("Credenciales incorrectas")
         return user
 
