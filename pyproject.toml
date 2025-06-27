@@ -5,7 +5,8 @@ description = "A FastAPI project with a static frontend."
 
 [project.optional-dependencies]
 test = [
-    "pytest-asyncio"
+    "pytest-asyncio",
+    "python-dotenv"
 ]
 
 [tool.ruff]

@@ -392,6 +392,35 @@ Si prefieres desarrollar la API sin el contenedor Docker para la API (manteniend
 
 Las pruebas están organizadas por tipo para facilitar su ejecución y mantenimiento:
 
+#### Configuración del Entorno para Pruebas (`.env.test`)
+
+Para asegurar un entorno de pruebas aislado y consistente, se utiliza el archivo `.env.test`. Este archivo debe contener las variables de entorno específicas para la ejecución de los tests.
+
+**Configuración de `DATABASE_URL` para Tests Locales:**
+
+Si ejecutas los tests directamente en tu máquina local (no dentro de un contenedor Docker para la API), es crucial que la `DATABASE_URL` en `.env.test` apunte a `localhost` (o la IP de tu host) en lugar de `db` (que es el nombre del servicio de Docker Compose para la base de datos). Asegúrate de que el puerto de PostgreSQL esté correctamente mapeado (e.g., `5432`).
+
+Ejemplo de `.env.test` para desarrollo local:
+
+```dotenv
+DATABASE_URL="postgresql+asyncpg://user:password@localhost:5432/test_db"
+DEBUG=True
+SECRET_KEY="your_test_secret_key"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_MINUTES=10080
+```
+
+**Instalación de Dependencias de Test:**
+
+Asegúrate de instalar las dependencias de test usando `uv`:
+
+```bash
+uv pip install "[test]"
+```
+
+#### Ejecución de Pruebas
+
 ```bash
 # Ejecutar todas las pruebas
 pytest

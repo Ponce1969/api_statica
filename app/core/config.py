@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # Database
     SQLALCHEMY_DATABASE_URI: str = Field(
-        default_factory=lambda: os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+        default_factory=lambda: os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@localhost:5432/test_db")
     )
 
     # SMTP / Email
