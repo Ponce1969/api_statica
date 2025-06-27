@@ -60,8 +60,6 @@ class RoleRepositoryImpl(IRoleRepository):
         
         role_orm = self.model(**role_orm_data)
         self.db.add(role_orm)
-        await self.db.commit()
-        await self.db.refresh(role_orm)
         return self._to_domain(role_orm)
 
     async def update(self, entity: RoleDomain) -> RoleDomain:
@@ -75,9 +73,6 @@ class RoleRepositoryImpl(IRoleRepository):
         role_orm.description = entity.description or ""
         # role_orm.permissions = entity.permissions # Omitir si no se maneja
         # updated_at se manejará automáticamente si está configurado en el modelo ORM
-
-        await self.db.commit()
-        await self.db.refresh(role_orm)
         return self._to_domain(role_orm)
 
     # Ajustado a la interfaz IRepository
@@ -86,7 +81,6 @@ class RoleRepositoryImpl(IRoleRepository):
         if not role_orm:
             raise EntityNotFoundError(entity="Rol", entity_id=str(entity_id))
         await self.db.delete(role_orm)
-        await self.db.commit()
 
     async def count(self, **filters: str | float | bool | UUID | datetime | date | None) -> int:
         query = select(self.model)

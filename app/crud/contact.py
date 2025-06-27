@@ -64,8 +64,6 @@ class ContactRepository(IContactRepository):
 
         contact_orm = self.model(**contact_orm_data)
         self.db.add(contact_orm)
-        await self.db.commit()
-        await self.db.refresh(contact_orm)
         return self._to_domain(contact_orm)
 
     async def update(self, entity: ContactDomain) -> ContactDomain:
@@ -80,9 +78,6 @@ class ContactRepository(IContactRepository):
         # El campo updated_at debería actualizarse automáticamente si está configurado
         # en el ORM con onupdate=datetime.now(UTC) o similar.
         # Si no, hazlo manual: contact_orm.updated_at = datetime.now(UTC)
-        
-        await self.db.commit()
-        await self.db.refresh(contact_orm)
         return self._to_domain(contact_orm)
 
     async def delete(self, entity_id: UUID) -> None:
@@ -90,7 +85,6 @@ class ContactRepository(IContactRepository):
         if not contact_orm:
             raise EntityNotFoundError(entity="Contact", entity_id=str(entity_id))
         await self.db.delete(contact_orm)
-        await self.db.commit()
 
     async def get_by_email(self, email: str) -> Sequence[ContactDomain]:
         query = select(self.model).where(self.model.email == email)
@@ -187,8 +181,7 @@ class ContactRepository(IContactRepository):
             # Asegurar que UTC esté importado y datetime también
             contact_orm.updated_at = datetime.now(UTC)
             self.db.add(contact_orm) # Marcar para la sesión que el objeto ha cambiado
-            await self.db.commit()
-            await self.db.refresh(contact_orm)
+
         
         return self._to_domain(contact_orm)
 

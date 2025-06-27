@@ -28,26 +28,26 @@ class UserRepository(IUserRepository):
             is_superuser=bool(getattr(user_orm, 'is_superuser', False)),
         )
 
-    async def create(self, user: User, hashed_password: str | None = None) -> User:
+    async def create(self, entity: User, hashed_password: str | None = None) -> User:
         user_orm = UserORM(
-            email=user.email,
+            email=entity.email,
             hashed_password=hashed_password,
-            full_name=user.full_name,
-            is_active=user.is_active,
-            is_superuser=user.is_superuser,
+            full_name=entity.full_name,
+            is_active=entity.is_active,
+            is_superuser=entity.is_superuser,
         )
         self.db.add(user_orm)
         await self.db.flush()
         await self.db.refresh(user_orm)
         return self._to_domain(user_orm)
 
-    async def get_by_email(self, email: str) -> tuple[User, str] | None:
+    async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(
             select(self.model).where(self.model.email == email)
         )
         user_orm = result.scalars().first()
         if user_orm:
-            return self._to_domain(user_orm), user_orm.hashed_password
+            return self._to_domain(user_orm)
         return None
 
     async def get(self, entity_id: UUID) -> User | None:
@@ -104,6 +104,31 @@ class UserRepository(IUserRepository):
         )
         users_orm = result.scalars().all()
         return [self._to_domain(user_orm) for user_orm in users_orm]
+
+    async def get_hashed_password_by_email(self, email: str) -> str:
+        """
+        Obtiene el hash de la contraseña de un usuario por su email.
+        
+        Args:
+            email: Email del usuario
+            
+        Returns:
+            str: El hash de la contraseña del usuario
+            
+        Raises:
+            ValidationError: Si no existe un usuario con el email proporcionado
+        """
+        from app.domain.exceptions.base import ValidationError
+        
+        result = await self.db.execute(
+            select(self.model.hashed_password).where(self.model.email == email)
+        )
+        hashed_password = result.scalar_one_or_none()
+        
+        if hashed_password is None:
+            raise ValidationError("Credenciales incorrectas")
+            
+        return hashed_password
 
     async def update_last_login(self, user_id: UUID) -> User:
         result = await self.db.execute(

@@ -84,3 +84,13 @@ class Base(DeclarativeBase):
         """
         data = self.to_dict()
         return model.model_validate(data, strict=strict)
+
+# ---------------------------------------------------------------------------
+# Registro automático de modelos (evita "no such table" en tests)
+# ---------------------------------------------------------------------------
+from importlib import import_module as _import_module
+try:
+    _import_module("app.database.models")
+except ModuleNotFoundError:
+    # Puede ocurrir en fases tempranas de instalación
+    pass
