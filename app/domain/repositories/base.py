@@ -257,6 +257,19 @@ class IUserRepository(IRepository[User], ABC): # Renombrado y hereda de IReposit
         ...
 
     @abstractmethod
+    async def get_hashed_password_by_email(self, email: str) -> str | None:
+        """
+        Obtiene el hashed_password de un usuario por su dirección de email.
+
+        Args:
+            email: Dirección de email del usuario.
+
+        Returns:
+            str | None: El hashed_password si el usuario existe, None en caso contrario.
+        """
+        ...
+
+    @abstractmethod
     async def update_last_login(self, user_id: UUID) -> User:
         """
         Actualiza la fecha de último login de un usuario.

@@ -1,7 +1,10 @@
 """Schemas Pydantic para ContactRequest."""
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime, timezone
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field, field_serializer
 from pydantic import ConfigDict
 
 
@@ -16,10 +19,26 @@ class ContactRequestCreate(BaseModel):
 
 class ContactRequestResponse(BaseModel):
     """Respuesta devuelta al frontend."""
-
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat() if v is not None else None
+        }
+    )
+    
     id: str
     full_name: str
     email: EmailStr
     message: str
-
-    model_config = ConfigDict(from_attributes=True)
+    created_at: datetime
+    updated_at: datetime | None = None
+    
+    # Asegurar que las fechas sean timezone-aware
+    @field_serializer('created_at', 'updated_at')
+    def serialize_dt(self, dt: datetime | None, _info) -> str | None:
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            # Si la fecha no tiene zona horaria, asumir UTC
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat()

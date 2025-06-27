@@ -6,28 +6,29 @@ independientemente de la persistencia o infraestructura.
 from datetime import UTC, datetime
 from uuid import UUID
 
-from app.domain.models.base import Entity
+from app.domain.models.base import AuditableEntity
 
 
-class Role(Entity):
+class Role(AuditableEntity):
     """Entidad de dominio que representa un rol en el sistema."""
     
     id: UUID
     name: str
     description: str | None
     created_at: datetime
+    updated_at: datetime | None
     
     def __init__(
         self,
         name: str,
         description: str | None = None,
         id: UUID | None = None, # Cambiado de entity_id a id
-        created_at: datetime | None = None
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None
     ) -> None:
-        super().__init__(id)
+        super().__init__(id, created_at, updated_at)
         self.name = name
         self.description = description
-        self.created_at = created_at or datetime.now(UTC)
     
     def update_description(self, new_description: str) -> None:
         """Actualiza la descripción del rol."""
