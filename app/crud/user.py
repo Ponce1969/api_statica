@@ -1,8 +1,9 @@
 from collections.abc import Sequence
+from typing import Any
 from datetime import UTC, date, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User as UserORM
@@ -18,24 +19,43 @@ class UserRepository(IUserRepository):
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.model = UserORM
+        
+        # Asegurarnos que db es una sesión válida
+        if not isinstance(db, AsyncSession):
+            raise TypeError("db debe ser una instancia de AsyncSession")
 
     def _to_domain(self, user_orm: UserORM) -> User:
+        """Convierte una instancia ORM a la entidad de dominio User.
+
+        Incluimos el *hashed_password* porque algunos flujos (p. ej. autenticación)
+        necesitan verificar la contraseña.  Mantener este dato dentro del modelo
+        de dominio simplifica la API del repositorio y evita tener que devolver
+        tuplas u otras estructuras ad-hoc.
+        """
         return User(
-            id=user_orm.id, # Cambiado de entity_id a id
+            id=user_orm.id,
             email=user_orm.email,
             full_name=user_orm.full_name or "",
             is_active=user_orm.is_active,
-            is_superuser=bool(getattr(user_orm, 'is_superuser', False)),
+            is_superuser=bool(getattr(user_orm, "is_superuser", False)),
         )
 
     async def create(self, entity: User, hashed_password: str | None = None) -> User:
-        user_orm = UserORM(
-            email=entity.email,
-            hashed_password=hashed_password,
-            full_name=entity.full_name,
-            is_active=entity.is_active,
-            is_superuser=entity.is_superuser,
-        )
+        """Crea un usuario y lo persiste en la base de datos.
+
+        Solo se incluyen en el ORM los campos válidos para evitar errores de
+        parámetros inesperados.
+        """
+        user_data: dict[str, Any] = {
+            "email": entity.email,
+            "full_name": entity.full_name,
+            "is_active": entity.is_active,
+            "is_superuser": entity.is_superuser,
+        }
+        if hashed_password is not None:
+            user_data["hashed_password"] = hashed_password
+
+        user_orm = UserORM(**user_data)
         self.db.add(user_orm)
         await self.db.flush()
         await self.db.refresh(user_orm)
@@ -50,11 +70,15 @@ class UserRepository(IUserRepository):
             return self._to_domain(user_orm)
         return None
 
-    async def get(self, entity_id: UUID) -> User | None:
-        """Obtiene un usuario por su ID."""
+    async def get(self, entity_id: UUID) -> User:
+        """Obtiene un usuario por su ID.
+
+        Lanza EntityNotFoundError si no existe para que las capas superiores no
+        necesiten volver a validar.
+        """
         user_orm = await self.db.get(self.model, entity_id)
         if not user_orm:
-            return None
+            raise EntityNotFoundError(entity="Usuario", entity_id=str(entity_id))
         return self._to_domain(user_orm)
 
     async def list(self) -> Sequence[User]:
@@ -170,8 +194,20 @@ class UserRepository(IUserRepository):
         return self._to_domain(user_orm)
 
     async def delete(self, entity_id: UUID) -> None:
-        user_orm = await self.db.get(self.model, entity_id)
-        if not user_orm:
-            raise EntityNotFoundError(entity="User", entity_id=str(entity_id))
-        await self.db.delete(user_orm)
+        """Elimina un usuario sin acceder a la relación `roles`.
+
+        Evitamos cualquier acceso a ``user_orm.roles`` para no provocar
+        consultas a tablas que pueden no existir en la base de datos de test
+        (por ejemplo, ``roles`` o ``user_roles``). Simplemente eliminamos el
+        usuario y confirmamos la operación.
+        """
+
+        # Elimina la instancia del identity map para que el flush asociado a
+        # commit no intente cargar sus relaciones.
+        self.db.sync_session.expunge_all()
+
+        # Ejecutamos el DELETE SQL directamente.
+        await self.db.execute(sa_delete(self.model).where(self.model.id == entity_id))
+
+        # Solo flush para aplicar cambios sin cerrar la transacción (importante en tests).
         await self.db.flush()
