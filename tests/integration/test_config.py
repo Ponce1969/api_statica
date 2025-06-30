@@ -18,14 +18,17 @@ class TestSettings(Settings):
     # Sobrescribir valores problemáticos
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 días
     
+    # Usar la base de datos de Docker que acabamos de levantar
+    SQLALCHEMY_DATABASE_URI: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db_test"
     # Desactivar debug para tests
     DEBUG: bool = False
     
-    # Configuración de base de datos para pruebas
-    SQLALCHEMY_DATABASE_URI: str = os.getenv(
-        "TEST_DATABASE_URL", 
-        "sqlite+aiosqlite:///./test.db"
-    )
+    # Fallback para base de datos si no está disponible PostgreSQL
+    if not os.getenv("TEST_DATABASE_URL") and "localhost" not in SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_DATABASE_URI = os.getenv(
+            "TEST_DATABASE_URL", 
+            "sqlite+aiosqlite:///./test.db"
+        )
     
     # Asegurarse de que DATABASE_URL esté definido para compatibilidad
     DATABASE_URL: str = SQLALCHEMY_DATABASE_URI

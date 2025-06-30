@@ -12,7 +12,7 @@ class User(AuditableEntity):
 
     __slots__ = (
         "email", "full_name", "is_active", "is_superuser", "role_ids",
-        "_id", "created_at", "updated_at"
+        "_id", "created_at", "updated_at", "hashed_password"
     )
 
     def __init__(
@@ -25,6 +25,7 @@ class User(AuditableEntity):
         role_ids: set[UUID] | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
+        hashed_password: str | None = None
     ) -> None:
         super().__init__(id, created_at, updated_at)
 
@@ -46,6 +47,7 @@ class User(AuditableEntity):
         self.is_active = is_active
         self.is_superuser = is_superuser
         self.role_ids = role_ids or set()
+        self.hashed_password = hashed_password
 
     def assign_role(self, role_id: UUID) -> None:
         self.role_ids.add(role_id)

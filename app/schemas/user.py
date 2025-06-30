@@ -35,7 +35,13 @@ class UserResponse(BaseModel):
         return dt.isoformat()
 
 class UserUpdate(BaseModel):
+    """Esquema para actualizar un usuario existente.
+    
+    Todos los campos son opcionales para permitir actualizaciones parciales.
+    """
     email: EmailStr | None = None
     full_name: str | None = None
     password: str | None = None
     is_active: bool | None = None
+    
+    model_config = ConfigDict(from_attributes=True)

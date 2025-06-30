@@ -47,16 +47,30 @@ def event_loop() -> asyncio.AbstractEventLoop:
     loop.close()
 
 
+from alembic.config import Config
+from alembic import command
+import os
+
 @pytest_asyncio.fixture(scope="function")
 async def setup_database() -> AsyncGenerator[None, None]:
     """
     Fixture para configurar la base de datos de prueba.
-    Crea todas las tablas antes de cada test.
-    La base de datos en memoria se limpiará automáticamente después de cada test.
+    Usa Alembic para PostgreSQL y SQLAlchemy directo para SQLite.
     """
-    # Crear todas las tablas
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Determinar si estamos usando PostgreSQL o SQLite
+    is_postgres = "postgresql" in test_settings.SQLALCHEMY_DATABASE_URI
+    
+    if is_postgres:
+        # Configurar Alembic para PostgreSQL
+        alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "../../alembic.ini"))
+        alembic_cfg.set_main_option("sqlalchemy.url", test_settings.SQLALCHEMY_DATABASE_URI)
+        
+        # Aplicar migraciones
+        command.upgrade(alembic_cfg, "head")
+    else:
+        # Para SQLite, crear tablas directamente
+        async with test_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     
     try:
         yield
@@ -64,12 +78,14 @@ async def setup_database() -> AsyncGenerator[None, None]:
         # Limpiar la base de datos después de cada test
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
-        # Cerrar conexiones y eliminar archivo temporal
-        await test_engine.dispose()
-        try:
-            os.unlink(temp_db.name)
-        except:
-            pass
+        
+        # Si es SQLite, cerrar conexiones y eliminar archivo temporal
+        if not is_postgres:
+            await test_engine.dispose()
+            try:
+                os.unlink(temp_db.name)
+            except:
+                pass
 
 
 @pytest_asyncio.fixture

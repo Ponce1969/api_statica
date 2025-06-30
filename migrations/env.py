@@ -47,8 +47,9 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    # Usamos la URL de la base de datos de la configuración
-    url = settings.SQLALCHEMY_DATABASE_URI
+    # Usar db_url si está disponible, sino la configuración por defecto con reemplazos
+    db_url = config.get_main_option("db_url") or settings.SQLALCHEMY_DATABASE_URI
+    url = db_url.replace("postgresql+asyncpg", "postgresql").replace("localhost", "127.0.0.1")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -93,11 +94,19 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
+    # Usar db_url si está disponible, sino la configuración por defecto con reemplazos
+    db_url = config.get_main_option("db_url") or settings.SQLALCHEMY_DATABASE_URI
+    config.set_main_option("sqlalchemy.url", db_url.replace("postgresql+asyncpg", "postgresql").replace("localhost", "127.0.0.1"))
     asyncio.run(run_async_migrations())
 
 
 # Añadimos configuración al inicio para que Alembic sepa dónde está la URL
-config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI))
+db_url = context.get_x_argument(as_dictionary=True).get("db_url")
+if db_url:
+    config.set_main_option("sqlalchemy.url", db_url)
+else:
+    # Configuración por defecto
+    config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI).replace("localhost", "127.0.0.1"))
 
 if context.is_offline_mode():
     run_migrations_offline()
