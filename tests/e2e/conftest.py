@@ -82,6 +82,7 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     )()
     
     # Conectar eventos para manejar SAVEPOINT
+    from sqlalchemy import event
     @event.listens_for(session.sync_session, 'after_transaction_end')
     def restart_savepoint(session, transaction):
         if connection.closed:
@@ -106,7 +107,45 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
                 await transaction.rollback()
             await connection.close()
 
-# Anular la dependencia de la sesión de base de datos
+# Sesión de base de datos específica para pruebas E2E
+@pytest_asyncio.fixture(scope="function")
+async def db_session_e2e(engine) -> AsyncGenerator[AsyncSession, None]:
+    """Crea una sesión de base de datos específica para pruebas E2E."""
+    # Configurar la sesión con la conexión
+    session = async_sessionmaker(
+        bind=connection,
+        expire_on_commit=False,
+        class_=AsyncSession,
+        future=True
+    )()
+    
+    # Conectar eventos para manejar SAVEPOINT
+    from sqlalchemy import event
+    @event.listens_for(session.sync_session, 'after_transaction_end')
+    def restart_savepoint(session, transaction):
+        if connection.closed:
+            return
+        if not connection.in_nested_transaction():
+            connection.sync_connection.begin_nested()
+    
+    try:
+        yield session
+        # Hacer commit al final si no hubo errores
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        # Cerrar la sesión y la conexión
+        await session.close()
+        if connection.invalidated:
+            await connection.close()
+        else:
+            if connection.in_transaction():
+                await transaction.rollback()
+            await connection.close()
+
+# Anular la dependencia de la sesión de base de datos (mantener por compatibilidad)
 @pytest_asyncio.fixture(scope="function")
 async def override_get_db(db_session: AsyncSession):
     """Fixture para inyectar la sesión de base de datos en la aplicación."""
@@ -133,17 +172,41 @@ async def override_get_db(db_session: AsyncSession):
 
 # Cliente de prueba HTTP
 @pytest_asyncio.fixture(scope="function")
-async def test_app(override_get_db) -> AsyncGenerator[AsyncClient, None]:
-    """Fixture para el cliente de prueba HTTP con soporte para async."""
+async def client_e2e(db_session_e2e: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    """Fixture para el cliente de prueba HTTP E2E con soporte para async."""
+    # Importar get_db de app.core.deps que es la dependencia real usada por los endpoints
+    from app.core.deps import get_db
+    from app.database.session import get_async_session, AsyncSessionLocal
+    import sqlalchemy.ext.asyncio
+    from app.core import config
+    
     # Configurar el cliente para usar ASGITransport
     from httpx import ASGITransport
     
-    # Crear una nueva aplicación FastAPI para este test
-    test_app = fastapi_app
+    # Guardar configuraciones originales
+    app = fastapi_app
+    original_get_db_override = app.dependency_overrides.get(get_db)
+    original_get_async_session_override = app.dependency_overrides.get(get_async_session)
+    original_db_url = config.settings.SQLALCHEMY_DATABASE_URI
+    
+    # Modificar temporalmente la URL de la base de datos para los tests
+    # Esto evita que cualquier código que use settings directamente intente conectar a PostgreSQL
+    config.settings.SQLALCHEMY_DATABASE_URI = "sqlite+aiosqlite:///:memory:"
+    
+    # Definir la función que devolverá nuestra sesión de prueba
+    async def _get_test_db():
+        try:
+            yield db_session_e2e
+        finally:
+            pass  # La sesión se cierra en el fixture db_session_e2e
+    
+    # Aplicar el override para ambas dependencias
+    app.dependency_overrides[get_db] = _get_test_db
+    app.dependency_overrides[get_async_session] = _get_test_db
     
     # Crear el cliente con la aplicación
     async with AsyncClient(
-        transport=ASGITransport(app=test_app),
+        transport=ASGITransport(app=app),
         base_url="http://test",
         follow_redirects=True,
         timeout=30.0
@@ -151,6 +214,20 @@ async def test_app(override_get_db) -> AsyncGenerator[AsyncClient, None]:
         try:
             yield client
         finally:
+            # Restaurar los overrides originales
+            if original_get_db_override is None:
+                app.dependency_overrides.pop(get_db, None)
+            else:
+                app.dependency_overrides[get_db] = original_get_db_override
+                
+            if original_get_async_session_override is None:
+                app.dependency_overrides.pop(get_async_session, None)
+            else:
+                app.dependency_overrides[get_async_session] = original_get_async_session_override
+            
+            # Restaurar la URL original de la base de datos
+            config.settings.SQLALCHEMY_DATABASE_URI = original_db_url
+            
             # Limpiar cualquier estado después de la prueba
             await client.aclose()
 
@@ -180,8 +257,8 @@ async def create_test_user(db_session: AsyncSession):
     await db_session.commit()
     
     return {
-        "email": email,
-        "password": password,
+        "email": test_email,
+        "password": "testpassword",
         "user_id": str(user.id)
     }
 

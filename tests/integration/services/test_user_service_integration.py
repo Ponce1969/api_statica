@@ -23,7 +23,7 @@ async def user_repository(db_session: AsyncSession) -> UserRepository:
     return UserRepository(db=db_session)
 
 
-class TestPasswordHasher(PasswordHasher):
+class PasswordHasherTest(PasswordHasher):
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return verify_password(plain_password, hashed_password)
 
@@ -31,9 +31,9 @@ class TestPasswordHasher(PasswordHasher):
         return get_password_hash(password)
 
 @pytest.fixture
-def password_hasher() -> TestPasswordHasher:
+def password_hasher() -> PasswordHasherTest:
     """Fixture para proporcionar una instancia de PasswordHasher para pruebas."""
-    return TestPasswordHasher()
+    return PasswordHasherTest()
 
 
 @pytest.fixture
