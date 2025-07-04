@@ -7,9 +7,15 @@ import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
 
-# 1) Antes que nada, fuerza la URL de test
+# 1) Configura la URL de la base de datos de test desde una variable de entorno
+import os
 from app.core.config import settings
-settings.SQLALCHEMY_DATABASE_URI = "sqlite+aiosqlite:///:memory:"
+
+# Lee la TEST_DATABASE_URL de las variables de entorno.
+# Si no está definida, usa un valor por defecto para el servicio test_db de Docker.
+DEFAULT_TEST_DATABASE_URL = "postgresql+asyncpg://testuser:testpassword@localhost:5433/app_test"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", DEFAULT_TEST_DATABASE_URL)
+settings.SQLALCHEMY_DATABASE_URI = TEST_DATABASE_URL
 
 # 2) Ahora importa el resto
 from httpx import AsyncClient, ASGITransport
@@ -23,10 +29,9 @@ from app.core.deps import get_db
 
 # 3) Crea el engine y sessionmaker global de test
 _engine = create_async_engine(
-    settings.SQLALCHEMY_DATABASE_URI, 
-    echo=False, 
-    poolclass=NullPool,
-    connect_args={"check_same_thread": False}
+    settings.SQLALCHEMY_DATABASE_URI,
+    echo=False,  # Puedes cambiarlo a True para debuggear SQL
+    poolclass=NullPool
 )
 _TestSessionLocal = sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
