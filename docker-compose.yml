@@ -1,4 +1,15 @@
 services:
+  test_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_TEST:-app_test}
+      POSTGRES_USER: ${POSTGRES_USER_TEST:-testuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TEST:-testpassword}
+    ports:
+      - "5433:5432" # Exponer en puerto diferente para evitar conflicto con db de desarrollo
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data
+
   db:
     image: postgres:16-alpine
     environment:
@@ -24,3 +35,4 @@ services:
 
 volumes:
   pgdata: # Definición del volume
+  pgdata_test:
