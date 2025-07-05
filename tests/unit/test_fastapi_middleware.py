@@ -77,7 +77,7 @@ class TestRequestLoggingMiddleware:
         assert middleware.slow_response_threshold_ms == slow_threshold
     
     @pytest.mark.asyncio
-    async def test_process_request_excluded_path(
+    async def test_dispatch_excluded_path( # Renombrado para claridad
         self, mock_app: MagicMock, mock_request: MagicMock
     ) -> None:
         """Verifica que se excluyen correctamente las rutas especificadas."""
@@ -92,7 +92,7 @@ class TestRequestLoggingMiddleware:
         call_next = AsyncMock(return_value=mock_response)
         
         # Procesar la solicitud
-        response = await middleware.process_request(mock_request, call_next)
+        response = await middleware.dispatch(mock_request, call_next) # LLAMAR A DISPATCH
         
         # Verificar que se ha llamado a call_next con la solicitud
         call_next.assert_called_once_with(mock_request)
@@ -101,7 +101,7 @@ class TestRequestLoggingMiddleware:
         assert response is mock_response
     
     @pytest.mark.asyncio
-    async def test_process_request_normal(
+    async def test_dispatch_normal( # Renombrado para claridad
         self, mock_app: MagicMock, mock_request: MagicMock, mock_response: MagicMock
     ) -> None:
         """Verifica que se procesa correctamente una solicitud normal."""
@@ -123,7 +123,7 @@ class TestRequestLoggingMiddleware:
             call_next = AsyncMock(return_value=mock_response)
             
             # Procesar la solicitud
-            response = await middleware.process_request(mock_request, call_next)
+            response = await middleware.dispatch(mock_request, call_next) # LLAMAR A DISPATCH
             
             # Verificar que se ha generado un ID único para la solicitud
             assert mock_request.state.request_id == "12345678-1234-5678-1234-567812345678"
@@ -150,7 +150,7 @@ class TestRequestLoggingMiddleware:
             assert response is mock_response
     
     @pytest.mark.asyncio
-    async def test_process_request_slow(
+    async def test_dispatch_slow( # Renombrado para claridad
         self, mock_app: MagicMock, mock_request: MagicMock, mock_response: MagicMock
     ) -> None:
         """Verifica que se detecta correctamente una respuesta lenta."""
@@ -172,7 +172,7 @@ class TestRequestLoggingMiddleware:
             call_next = AsyncMock(return_value=mock_response)
             
             # Procesar la solicitud
-            response = await middleware.process_request(mock_request, call_next)
+            response = await middleware.dispatch(mock_request, call_next) # LLAMAR A DISPATCH
 
             # Verificar que se ha llamado a call_next con la solicitud
             call_next.assert_called_once_with(mock_request)
@@ -183,7 +183,7 @@ class TestRequestLoggingMiddleware:
             assert "ALERTA: Respuesta lenta" in mock_logger.log.call_args[0][1]
     
     @pytest.mark.asyncio
-    async def test_process_request_error(
+    async def test_dispatch_error( # Renombrado para claridad
         self, mock_app: MagicMock, mock_request: MagicMock
     ) -> None:
         """Verifica que se maneja correctamente un error durante el procesamiento."""
@@ -205,7 +205,7 @@ class TestRequestLoggingMiddleware:
             
             # Procesar la solicitud (debe lanzar la excepción)
             with pytest.raises(ValueError):
-                await middleware.process_request(mock_request, call_next)
+                await middleware.dispatch(mock_request, call_next) # LLAMAR A DISPATCH
 
             # Verificar que se ha generado un ID único para la solicitud
             assert mock_request.state.request_id == "12345678-1234-5678-1234-567812345678"
